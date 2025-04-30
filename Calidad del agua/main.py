@@ -19,6 +19,7 @@ def menu():
     print("5. Salir.")
 
 #Ciclo principal en el que estamos corriendo constantemente el menu
+limpiar()
 while True:
     menu()
     opcion = int(input("Ingrese una opcion: "))
@@ -35,5 +36,4 @@ while True:
         else:
             print("Programa finalizado, chao pescao :3...")
             break
-    pausa()
     limpiar()
