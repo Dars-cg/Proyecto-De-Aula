@@ -42,78 +42,108 @@ def getDataMenu():
         pause()
         getDataMenu()
 
+# Función que se ejecuta si el usuario desea crear un archivo nuevo de datos.
 def newFile():
-    fileName = input("Ingrese el nombre del archivo: ")
-    print("")
-    carpeta = Path("Datos")
-    carpeta.mkdir(exist_ok=True)
+    # ========= INGRESO DEL NOMBRE Y VERIFICACIÓN DE ARCHIVO =========
 
+    fileName = input("Ingrese el nombre del archivo: ")  # Solicita el nombre para el nuevo archivo
+    print("")  # Salto de línea para mejorar la presentación
+
+    # Se define la carpeta "Datos" usando Path para manejo seguro de rutas
+    carpeta = Path("Datos")
+    carpeta.mkdir(exist_ok=True)  # Crea la carpeta si no existe
+
+    # Construye la ruta completa al archivo a crear
     file = carpeta / f"{fileName}.xlsx"
 
+    # Verifica si el archivo ya existe. Si existe, reinicia la función (llamada recursiva)
     if file.exists():
         print("El archivo ya existe.")
-        newFile()
+        newFile()  # Vuelve a pedir un nuevo nombre
     else:
+        # ========= INGRESO DE DATOS =========
+
+        # Inicializa listas vacías para fechas y valores
         dates = []
         values = []
+
+        # Ciclo principal para recolección de datos
         while True:
+            # Solicita y valida la fecha en formato dd/mm/aa
             while True:
                 date = input("Ingresa la fecha (formato dd/mm/aa): ")
                 try:
-                    datetime.strptime(date, "%d/%m/%y")
+                    datetime.strptime(date, "%d/%m/%y")  # Valida el formato
                     break
                 except ValueError:
                     print("Formato inválido. Usa dd/mm/aa.")
 
+            # Solicita y valida que el valor ingresado sea un número flotante
             try:
                 value = float(input("Ingresa el valor: "))
             except ValueError:
                 print("Valor inválido. Intenta de nuevo.")
-                continue
+                continue  # Vuelve a pedir la fecha y el valor
+
+            # Almacena los datos válidos
             dates.append(date)
             values.append(value)
 
+            # Pregunta al usuario si desea ingresar más datos
             while True:
                 try:
                     op = int(input("¿Deseas agregar otro dato? (1. Sí, 2. No): "))
                     if op in (1, 2):
                         print("")
-                        break
+                        break  # Sal del ciclo si la opción es válida
                     else:
                         print("Opción inválida.")
                 except ValueError:
                     print("Debes ingresar un número (1 o 2).")
 
-            if op == 2:
+            if op == 2:  # Si el usuario elige no agregar más datos
                 break
 
+        # ========= CREACIÓN DEL ARCHIVO EXCEL =========
+
+        # Crea un diccionario con los datos recolectados
         data = {
             "Fecha": dates,
             "Valor": values
         }
+
         print("El archivo no existe. Será creado ahora.")
+
+        # Convierte el diccionario a DataFrame y guarda el archivo en formato Excel
         df = pd.DataFrame(data)
         df.to_excel(file, index=False)
+
         print(f"Archivo '{file}' creado correctamente.")
 
-def addDataToExistingFile():
-    carpeta = Path("Datos")
-    archivos = [archivo.name for archivo in carpeta.glob("*.xlsx")]
 
+#Función en la que podemos agregar datos a un registros a un archivo existente.
+def addDataToExistingFile():
+    #Damos formato usando la libreria path
+    carpeta = Path("Datos")
+    #En este array se almacenan los nombres de todos los archivos en la carpeta "Datos" que tengan la extensión ".xlsx".
+    archivos = [archivo.name for archivo in carpeta.glob("*.xlsx")]
+    
+    #Si la carpeta está vacia, muestra un mensaje.
     if not archivos:
         print("No hay archivos disponibles para editar.")
         return
 
+    #Si hay archivos dentro de la carpeta, imprime la lista en pantalla.
     print("Archivos existentes:")
     for i, archivo in enumerate(archivos, start=1):
         print(f"{i}. {archivo}")
     
-    # Elegir el archivo
+    # Elegir el archivo.
     while True:
         try:
             op = int(input("Selecciona el número del archivo para agregar datos (0 para salir): "))
             if op == 0:
-                return  # Volver al menú anterior
+                return  # Volver al menú anterior.
             if 1 <= op <= len(archivos):
                 file_name = archivos[op - 1]
                 break
@@ -122,35 +152,37 @@ def addDataToExistingFile():
         except ValueError:
             print("Por favor ingresa un número válido.")
 
-    # Cargar el archivo seleccionado
+    # Cargar el archivo seleccionado.
     file = carpeta / file_name
     df = pd.read_excel(file)
 
-    # Mostrar datos actuales del archivo
+    # Mostrar datos actuales del archivo.
     print(f"\nContenido actual de '{file_name}':")
     print(df)
 
-    # Agregar nuevos datos
+    # Agregar nuevos datos.
+    #Creamos los arrays que representan a las fechas y los valores.
     dates = []
     values = []
     while True:
-        # Validar formato de fecha
+        # Validar formato de fecha.
         while True:
             date = input("Ingresa la fecha (formato dd/mm/aa): ")
             try:
-                # Intentamos convertir la cadena a una fecha real
+                # Intentamos convertir la cadena a una fecha real.
                 datetime.strptime(date, "%d/%m/%y")
                 break
             except ValueError:
                 print("Formato inválido. Usa dd/mm/aa.")
 
-        # Ingreso de valor
+        # Ingreso de valor.
         try:
             value = float(input("Ingresa el valor: "))
         except ValueError:
             print("Valor inválido. Intenta de nuevo.")
             continue
 
+        #Agrega los nuevos datos a los arrays.
         dates.append(date)
         values.append(value)
 
@@ -182,55 +214,75 @@ def addDataToExistingFile():
     df.to_excel(file, index=False)
     print(f"Datos agregados correctamente al archivo '{file_name}'.")
 
+
 def printExistingFile():
+    # ========= SELECCIÓN DE ARCHIVOS =========
+    
+    # Usa la clase Path para trabajar con rutas de archivos de forma más segura y clara
     carpeta = Path("Datos")
+
+    # Obtiene una lista con los nombres de todos los archivos con extensión .xlsx en la carpeta
     archivos = [archivo.name for archivo in carpeta.glob("*.xlsx")]
 
+    # Si no hay archivos disponibles, muestra un mensaje y finaliza la función
     if not archivos:
         print("No hay archivos disponibles para mostrar.")
         pause()
         return
 
+    # Muestra la lista numerada de archivos disponibles
     print("Archivos disponibles:")
     for i, archivo in enumerate(archivos, start=1):
         print(f"{i}. {archivo}")
 
+    # ========= SELECCIÓN DEL ARCHIVO POR PARTE DEL USUARIO =========
+
     while True:
         try:
+            # Solicita al usuario que elija un archivo por su número
             op = int(input("Selecciona el número del archivo a imprimir (0 para salir): "))
             if op == 0:
-                return
+                return  # Sale si elige 0
             if 1 <= op <= len(archivos):
-                file_name = archivos[op - 1]
+                file_name = archivos[op - 1]  # Guarda el nombre del archivo seleccionado
                 break
             else:
-                print("Opción inválida.")
+                print("Opción inválida.")  # Si el número está fuera de rango
         except ValueError:
-            print("Por favor ingresa un número válido.")
+            print("Por favor ingresa un número válido.")  # Si se ingresa un valor no numérico
 
-    file_path = carpeta / file_name
-    df = pd.read_excel(file_path)
+    # ========= LECTURA Y MOSTRADO DEL ARCHIVO =========
+
+    file_path = carpeta / file_name  # Construye la ruta completa al archivo
+    df = pd.read_excel(file_path)    # Lee el archivo Excel como DataFrame de pandas
+
     print(f"\nContenido del archivo '{file_name}':\n")
-    print(df)
-    print("")  # Línea extra para estética
-    pause()
-    
+    print(df)  # Muestra el contenido del DataFrame en consola
+    print("")  # Línea vacía para mejor presentación
+    pause()    # Pausa para que el usuario pueda ver el resultado antes de continuar
+
 
 
 def predictions():
-    carpeta = "Datos"  # Asegúrate de que el nombre coincide con el resto del código
+    # Define la carpeta donde se encuentran los archivos de datos
+    carpeta = "Datos"
     archivos = os.listdir(carpeta)
+
+    # Filtra solo los archivos Excel (.xlsx)
     archivos_excel = [f for f in archivos if f.endswith(".xlsx")]
 
+    # Verifica si hay archivos disponibles
     if not archivos_excel:
         print("No se encontraron archivos Excel en la carpeta 'Datos'.")
         pause()
         return
 
+    # Muestra la lista de archivos al usuario
     print("Archivos disponibles:")
     for i, archivo in enumerate(archivos_excel, 1):
         print(f"{i}. {archivo}")
 
+    # Solicita al usuario que elija uno de los archivos por número
     try:
         eleccion = int(input("Seleccione un archivo por número: "))
         archivo_seleccionado = archivos_excel[eleccion - 1]
@@ -239,28 +291,45 @@ def predictions():
         pause()
         return
 
+    # Construye la ruta completa del archivo seleccionado
     ruta = os.path.join(carpeta, archivo_seleccionado)
     try:
+        # Lee el archivo Excel
         df = pd.read_excel(ruta)
-        df.columns = df.columns.str.lower()  # Normaliza nombres de columna
+
+        # Convierte los nombres de columna a minúsculas por seguridad (e.g. 'Fecha' → 'fecha')
+        df.columns = df.columns.str.lower()
+
+        # Intenta convertir la columna 'fecha' al formato correcto dd/mm/aa
         df["fecha"] = pd.to_datetime(df["fecha"], format="%d/%m/%y", errors="coerce")
+
+        # Si alguna fecha no se puede convertir, lanza una advertencia
         if df["fecha"].isnull().any():
             print("Algunas fechas no se pudieron convertir. Revisa el archivo.")
             pause()
             return
+
+        # Calcula la cantidad de días desde la primera fecha registrada
         df["dias"] = (df["fecha"] - df["fecha"].min()).dt.days
+
     except Exception as e:
         print("Error al procesar el archivo:", e)
         pause()
         return
 
-    # Regresión lineal simple
-    X = df["dias"].values
-    y = df["valor"].values
+    # ========= REGRESIÓN LINEAL =========
+
+    # Extrae los valores numéricos para regresión
+    X = df["dias"].values  # Eje X: días desde la fecha inicial
+    y = df["valor"].values  # Eje Y: valores de medición
+
+    # Ajusta un modelo de regresión lineal simple: y = m*x + b
     coef = np.polyfit(X, y, 1)
     modelo = np.poly1d(coef)
 
-    # Selección de predicción
+    # ========= CONFIGURACIÓN DE PREDICCIÓN =========
+
+    # Pregunta al usuario en qué unidad de tiempo quiere predecir
     print("\n¿En qué unidad quieres hacer predicciones?")
     print("1. Días")
     print("2. Meses")
@@ -273,6 +342,7 @@ def predictions():
         pause()
         return
 
+    # Define el salto temporal según la unidad seleccionada
     if unidad == 1:
         salto = timedelta(days=1)
     elif unidad == 2:
@@ -284,43 +354,66 @@ def predictions():
         pause()
         return
 
-    fecha_base = df["fecha"].max()
-    dias_base = df["dias"].max()
+    # ========= GENERACIÓN DE PREDICCIONES =========
+
+    fecha_base = df["fecha"].max()   # Última fecha registrada en el archivo
+    dias_base = df["dias"].max()     # Última cantidad de días desde el inicio
 
     print("\nPredicciones:")
     for i in range(1, cantidad + 1):
+        # Calcula la nueva fecha de predicción
         fecha_pred = fecha_base + salto * i
-        dias_pred = dias_base + (salto * i).days
-        valor_pred = modelo(dias_pred)
-        print(f"{fecha_pred.strftime('%d/%m/%y')}: {valor_pred:.2f}")
-   
 
+        # Calcula los días correspondientes a esa fecha predicha
+        dias_pred = dias_base + (salto * i).days
+
+        # Aplica el modelo de regresión para estimar el valor
+        valor_pred = modelo(dias_pred)
+
+        # Imprime el resultado en formato dd/mm/aa
+        print(f"{fecha_pred.strftime('%d/%m/%y')}: {valor_pred:.2f}")
+  
+
+# Función que gestiona el menú principal de la opción 1
 def option1():
+    # Ciclo principal que mantiene el menú activo hasta que el usuario elija salir
     while True:
-        menuOp1()
-        option = int(input("ingrese una opcion: "))
+        menuOp1()  # Muestra el submenú de opciones
+        option = int(input("Ingrese una opción: "))  # Solicita al usuario que seleccione una opción
+
         if option == 1:
+            # Opción 1: Obtener y guardar nuevos datos en un archivo Excel
             getDataMenu()
-            pause()
-            clean()
+            pause()   # Espera que el usuario presione una tecla
+            clean()   # Limpia la pantalla
+
         elif option == 2:
-            
+            # Opción 2: Reservada o sin implementar aún (por ahora solo limpia la pantalla)
             clean()
+
         elif option == 3:
+            # Opción 3: Muestra el contenido de un archivo Excel existente
             clean()
             printExistingFile()
             clean()
+
         elif option == 4:
+            # Opción 4: Realiza predicciones a partir de un archivo existente
             clean()
             print("Realizar predicciones")
             predictions()
             pause()
             clean()
+
         elif option == 5:
+            # Opción 5: Salir del menú
             clean()
             break
+
         else:
-            print("Opción invalida.")
+            # Si la opción ingresada no es válida, se informa al usuario
+            print("Opción inválida.")
             pause()
             clean()
+
     
