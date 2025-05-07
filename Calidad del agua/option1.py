@@ -252,7 +252,7 @@ def printExistingFile():
             print("Por favor ingresa un número válido.")  # Si se ingresa un valor no numérico
 
     # ========= LECTURA Y MOSTRADO DEL ARCHIVO =========
-
+    
     file_path = carpeta / file_name  # Construye la ruta completa al archivo
     df = pd.read_excel(file_path)    # Lee el archivo Excel como DataFrame de pandas
 
@@ -265,11 +265,9 @@ def printExistingFile():
 
 def predictions():
     # Define la carpeta donde se encuentran los archivos de datos
-    carpeta = "Datos"
-    archivos = os.listdir(carpeta)
-
+    carpeta = Path("Datos")
     # Filtra solo los archivos Excel (.xlsx)
-    archivos_excel = [f for f in archivos if f.endswith(".xlsx")]
+    archivos_excel = [archivo.name for archivo in carpeta.glob("*.xlsx")]
 
     # Verifica si hay archivos disponibles
     if not archivos_excel:
@@ -292,7 +290,7 @@ def predictions():
         return
 
     # Construye la ruta completa del archivo seleccionado
-    ruta = os.path.join(carpeta, archivo_seleccionado)
+    ruta = carpeta / archivo_seleccionado
     try:
         # Lee el archivo Excel
         df = pd.read_excel(ruta)
