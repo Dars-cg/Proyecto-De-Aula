@@ -47,14 +47,14 @@ def newFile():
     # ========= INGRESO DEL NOMBRE Y VERIFICACIÓN DE ARCHIVO =========
 
     fileName = input("Ingrese el nombre del archivo: ")  # Solicita el nombre para el nuevo archivo
-    print("")  # Salto de línea para mejorar la presentación
+    print("")  # jump de línea para mejorar la presentación
 
     # Se define la carpeta "Datos" usando Path para manejo seguro de rutas
-    carpeta = Path("Datos")
-    carpeta.mkdir(exist_ok=True)  # Crea la carpeta si no existe
+    folder = Path("Datos")
+    folder.mkdir(exist_ok=True)  # Crea la carpeta si no existe
 
     # Construye la ruta completa al archivo a crear
-    file = carpeta / f"{fileName}.xlsx"
+    file = folder / f"{fileName}.xlsx"
 
     # Verifica si el archivo ya existe. Si existe, reinicia la función (llamada recursiva)
     if file.exists():
@@ -124,40 +124,40 @@ def newFile():
 #Función en la que podemos agregar datos a un registros a un archivo existente.
 def addDataToExistingFile():
     #Damos formato usando la libreria path
-    carpeta = Path("Datos")
+    folder = Path("Datos")
     #En este array se almacenan los nombres de todos los archivos en la carpeta "Datos" que tengan la extensión ".xlsx".
-    archivos = [archivo.name for archivo in carpeta.glob("*.xlsx")]
+    files = [archivo.name for archivo in folder.glob("*.xlsx")]
     
     #Si la carpeta está vacia, muestra un mensaje.
-    if not archivos:
+    if not files:
         print("No hay archivos disponibles para editar.")
         return
 
     #Si hay archivos dentro de la carpeta, imprime la lista en pantalla.
-    print("Archivos existentes:")
-    for i, archivo in enumerate(archivos, start=1):
-        print(f"{i}. {archivo}")
+    print("files existentes:")
+    for i, file in enumerate(files, start=1):
+        print(f"{i}. {file}")
     
     # Elegir el archivo.
     while True:
         try:
-            op = int(input("Selecciona el número del archivo para agregar datos (0 para salir): "))
+            op = int(input("Sselectiona el número del archivo para agregar datos (0 para salir): "))
             if op == 0:
                 return  # Volver al menú anterior.
-            if 1 <= op <= len(archivos):
-                file_name = archivos[op - 1]
+            if 1 <= op <= len(files):
+                fileName = files[op - 1]
                 break
             else:
                 print("Opción inválida. Elige un número válido.")
         except ValueError:
             print("Por favor ingresa un número válido.")
 
-    # Cargar el archivo seleccionado.
-    file = carpeta / file_name
+    # Cargar el archivo sselectionado.
+    file = folder / fileName
     df = pd.read_excel(file)
 
     # Mostrar datos actuales del archivo.
-    print(f"\nContenido actual de '{file_name}':")
+    print(f"\nContenido actual de '{fileName}':")
     print(df)
 
     # Agregar nuevos datos.
@@ -201,50 +201,50 @@ def addDataToExistingFile():
             break
 
     # Agregar los nuevos datos al DataFrame
-    new_data = {
+    newData = {
         "Fecha": dates,
         "Valor": values
     }
-    new_df = pd.DataFrame(new_data)
+    newDf = pd.DataFrame(newData)
 
     # Concatenar los datos actuales con los nuevos
-    df = pd.concat([df, new_df], ignore_index=True)
+    df = pd.concat([df, newDf], ignore_index=True)
 
     # Guardar el archivo actualizado
     df.to_excel(file, index=False)
-    print(f"Datos agregados correctamente al archivo '{file_name}'.")
+    print(f"Datos agregados correctamente al archivo '{fileName}'.")
 
 
 def printExistingFile():
     # ========= SELECCIÓN DE ARCHIVOS =========
     
     # Usa la clase Path para trabajar con rutas de archivos de forma más segura y clara
-    carpeta = Path("Datos")
+    folder = Path("Datos")
 
     # Obtiene una lista con los nombres de todos los archivos con extensión .xlsx en la carpeta
-    archivos = [archivo.name for archivo in carpeta.glob("*.xlsx")]
+    files = [file.name for file in folder.glob("*.xlsx")]
 
     # Si no hay archivos disponibles, muestra un mensaje y finaliza la función
-    if not archivos:
+    if not files:
         print("No hay archivos disponibles para mostrar.")
         pause()
         return
 
     # Muestra la lista numerada de archivos disponibles
     print("Archivos disponibles:")
-    for i, archivo in enumerate(archivos, start=1):
-        print(f"{i}. {archivo}")
+    for i, file in enumerate(files, start=1):
+        print(f"{i}. {file}")
 
     # ========= SELECCIÓN DEL ARCHIVO POR PARTE DEL USUARIO =========
 
     while True:
         try:
             # Solicita al usuario que elija un archivo por su número
-            op = int(input("Selecciona el número del archivo a imprimir (0 para salir): "))
+            op = int(input("Sselectiona el número del archivo a imprimir (0 para salir): "))
             if op == 0:
                 return  # Sale si elige 0
-            if 1 <= op <= len(archivos):
-                file_name = archivos[op - 1]  # Guarda el nombre del archivo seleccionado
+            if 1 <= op <= len(files):
+                fileName = files[op - 1]  # Guarda el nombre del archivo sselectionado
                 break
             else:
                 print("Opción inválida.")  # Si el número está fuera de rango
@@ -253,10 +253,10 @@ def printExistingFile():
 
     # ========= LECTURA Y MOSTRADO DEL ARCHIVO =========
     
-    file_path = carpeta / file_name  # Construye la ruta completa al archivo
-    df = pd.read_excel(file_path)    # Lee el archivo Excel como DataFrame de pandas
+    filePath = folder / fileName  # Construye la ruta completa al archivo
+    df = pd.read_excel(filePath)    # Lee el archivo Excel como DataFrame de pandas
 
-    print(f"\nContenido del archivo '{file_name}':\n")
+    print(f"\nContenido del archivo '{fileName}':\n")
     print(df)  # Muestra el contenido del DataFrame en consola
     print("")  # Línea vacía para mejor presentación
     pause()    # Pausa para que el usuario pueda ver el resultado antes de continuar
@@ -265,32 +265,32 @@ def printExistingFile():
 
 def predictions():
     # Define la carpeta donde se encuentran los archivos de datos
-    carpeta = Path("Datos")
+    folder = Path("Datos")
     # Filtra solo los archivos Excel (.xlsx)
-    archivos_excel = [archivo.name for archivo in carpeta.glob("*.xlsx")]
+    excelFiles = [file.name for file in folder.glob("*.xlsx")]
 
     # Verifica si hay archivos disponibles
-    if not archivos_excel:
+    if not excelFiles:
         print("No se encontraron archivos Excel en la carpeta 'Datos'.")
         pause()
         return
 
     # Muestra la lista de archivos al usuario
     print("Archivos disponibles:")
-    for i, archivo in enumerate(archivos_excel, 1):
-        print(f"{i}. {archivo}")
+    for i, file in enumerate(excelFiles, 1):
+        print(f"{i}. {file}")
 
     # Solicita al usuario que elija uno de los archivos por número
     try:
-        eleccion = int(input("Seleccione un archivo por número: "))
-        archivo_seleccionado = archivos_excel[eleccion - 1]
+        selection = int(input("Sselectione un archivo por número: "))
+        selectedFile = excelFiles[selection - 1]
     except (IndexError, ValueError):
         print("Selección inválida.")
         pause()
         return
 
-    # Construye la ruta completa del archivo seleccionado
-    ruta = carpeta / archivo_seleccionado
+    # Construye la ruta completa del archivo sselectionado
+    ruta = folder / selectedFile
     try:
         # Lee el archivo Excel
         df = pd.read_excel(ruta)
@@ -323,7 +323,7 @@ def predictions():
 
     # Ajusta un modelo de regresión lineal simple: y = m*x + b
     coef = np.polyfit(X, y, 1)
-    modelo = np.poly1d(coef)
+    model = np.poly1d(coef)
 
     # ========= CONFIGURACIÓN DE PREDICCIÓN =========
 
@@ -333,20 +333,20 @@ def predictions():
     print("2. Meses")
     print("3. Años")
     try:
-        unidad = int(input("Seleccione una opción (1-3): "))
-        cantidad = int(input("¿Cuántos pasos a futuro quieres predecir?: "))
+        unit = int(input("Sselectione una opción (1-3): "))
+        quantity = int(input("¿Cuántos pasos a futuro quieres predecir?: "))
     except ValueError:
         print("Entrada inválida.")
         pause()
         return
 
-    # Define el salto temporal según la unidad seleccionada
-    if unidad == 1:
-        salto = timedelta(days=1)
-    elif unidad == 2:
-        salto = timedelta(days=30)
-    elif unidad == 3:
-        salto = timedelta(days=365)
+    # Define el jump temporal según la unidad sselectionada
+    if unit == 1:
+        jump = timedelta(days=1)
+    elif unit == 2:
+        jump = timedelta(days=30)
+    elif unit == 3:
+        jump = timedelta(days=365)
     else:
         print("Unidad inválida.")
         pause()
@@ -354,22 +354,22 @@ def predictions():
 
     # ========= GENERACIÓN DE PREDICCIONES =========
 
-    fecha_base = df["fecha"].max()   # Última fecha registrada en el archivo
-    dias_base = df["dias"].max()     # Última cantidad de días desde el inicio
+    baseDate = df["fecha"].max()   # Última fecha registrada en el archivo
+    baseDays = df["dias"].max()     # Última cantidad de días desde el inicio
 
     print("\nPredicciones:")
-    for i in range(1, cantidad + 1):
+    for i in range(1, quantity + 1):
         # Calcula la nueva fecha de predicción
-        fecha_pred = fecha_base + salto * i
+        predDate = baseDate + jump * i
 
         # Calcula los días correspondientes a esa fecha predicha
-        dias_pred = dias_base + (salto * i).days
+        predDays = baseDays + (jump * i).days
 
         # Aplica el modelo de regresión para estimar el valor
-        valor_pred = modelo(dias_pred)
+        predValue = model(predDays)
 
         # Imprime el resultado en formato dd/mm/aa
-        print(f"{fecha_pred.strftime('%d/%m/%y')}: {valor_pred:.2f}")
+        print(f"{predDate.strftime('%d/%m/%y')}: {predValue:.2f}")
   
 
 # Función que gestiona el menú principal de la opción 1
@@ -377,7 +377,7 @@ def option1():
     # Ciclo principal que mantiene el menú activo hasta que el usuario elija salir
     while True:
         menuOp1()  # Muestra el submenú de opciones
-        option = int(input("Ingrese una opción: "))  # Solicita al usuario que seleccione una opción
+        option = int(input("Ingrese una opción: "))  # Solicita al usuario que sselectione una opción
 
         if option == 1:
             # Opción 1: Obtener y guardar nuevos datos en un archivo Excel
