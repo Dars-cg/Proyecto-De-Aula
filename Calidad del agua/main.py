@@ -1,12 +1,12 @@
 import os
 import option1
 #========================
-#Fin de las importaciones
+#Fin de las importaciones (os)
 
-#Funciones para limpiar y hacer pausas en la consola
-def limpiar():
-    os.system('cls')
-def pausa():
+#Funciones para limpiar y hacer pausas en la consola usando la libreria os(Operative System).
+def clean():
+    os.system('cls')#Clear console
+def pause():
     os.system("pause")
 
 #Función que nos imprime las opciones del menu
@@ -19,11 +19,13 @@ def menu():
     print("5. Salir.")
 
 #Ciclo principal en el que estamos corriendo constantemente el menu
-limpiar()
+#con la condición de que si la opción no está en el rango permitido
+#Nos 
+clean()
 while True:
     menu()
     opcion = int(input("Ingrese una opcion: "))
-    limpiar()
+    clean()
     if opcion >= 1 and opcion <= 5:
         if opcion == 1:
             option1.option1()
@@ -34,6 +36,9 @@ while True:
         elif opcion == 4:
             print("Opcion 4")
         else:
-            print("Programa finalizado, chao pescao :3...")
+            print("Programa finalizado...")
             break
-    limpiar()
+    else:
+        print("Opción invalida.")
+        pause()
+    clean()
