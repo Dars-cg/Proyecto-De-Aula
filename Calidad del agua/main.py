@@ -1,5 +1,6 @@
 import os
 import option1
+import option2
 #========================
 #Fin de las importaciones (os)
 
@@ -31,6 +32,7 @@ while True:
             option1.option1()
         elif opcion == 2:
             print("Opcion 2")
+            option2.option2()
         elif opcion == 3:
             print("Opcion 3")
         elif opcion == 4:
