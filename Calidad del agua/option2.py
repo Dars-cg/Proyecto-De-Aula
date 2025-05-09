@@ -11,14 +11,10 @@ def limpiar():
 def pausa():
     os.system("pause")
 
-#Funcion que nos imprime el menu de la opcion 2
-def menuOp2():
-    print("Generacion de Graficas.")
-    print("1. Elegir tipo de Graficas")
-    print("2. Mostrar Formato de Ejemplo")
-    print("3. Atrás")
-
-def lineGraph():
+def createGraph(graphType):
+    if(graphType == 4):
+        return
+    
     folder = Path("Datos")
     files = [file.name for file in folder.glob("*.xlsx")]
 
@@ -47,7 +43,6 @@ def lineGraph():
     filePath = folder / fileName 
     df = pd.read_excel(filePath)
 
-
     column1 = df['Fecha']
     #Parseado de columna de dataframe a numpy
     dates = column1.to_numpy()
@@ -62,13 +57,25 @@ def lineGraph():
     ylable = fileName.replace(extension, "")
 
     fig, ax = plt.subplots()
-    ax.plot(dates, values)
+    if(graphType == 1):
+        ax.bar(dates, values)
+        subfolder = "Barra"
+    elif(graphType == 2):
+        ax.scatter(dates, values)
+        subfolder = "Dispersion"
+    elif(graphType == 3):
+        ax.plot(dates, values)
+        subfolder = "Lineal"
+    else:
+        print("Opción invalida")
+        return
+
     ax.set_title(fileName)
     ax.set_xlabel("Fecha")
     ax.set_ylabel(ylable)
     ax.grid(True)
 
-    graphFolder = Path("Graficas") / "Lineas"
+    graphFolder = Path("Graficas") / subfolder
     graphFolder.mkdir(parents=True, exist_ok=True)
 
     date = datetime.now() 
@@ -80,6 +87,70 @@ def lineGraph():
     plt.show()
     pausa()
 
+def showGraphs():
+    graph_base = Path("Graficas")
+
+    if not graph_base.exists():
+        print("No hay carpeta de gráficas.")
+        pausa()
+        return
+
+    subfolders = [f for f in graph_base.iterdir() if f.is_dir()]
+    if not subfolders:
+        print("No hay subcarpetas de gráficas disponibles.")
+        pausa()
+        return
+
+    print("Tipos de gráficas guardadas:")
+    for i, folder in enumerate(subfolders, start=1):
+        print(f"{i}. {folder.name}")
+    
+    try:
+        folder_choice = int(input("Selecciona una carpeta (0 para salir): "))
+        if folder_choice == 0:
+            return
+        if 1 <= folder_choice <= len(subfolders):
+            selected_folder = subfolders[folder_choice - 1]
+        else:
+            print("Opción inválida.")
+            pausa()
+            return
+    except ValueError:
+        print("Entrada inválida.")
+        pausa()
+        return
+
+    images = list(selected_folder.glob("*.png"))
+    if not images:
+        print("No hay imágenes en esta carpeta.")
+        pausa()
+        return
+
+    print(f"Imágenes en {selected_folder.name}:")
+    for i, img in enumerate(images, start=1):
+        print(f"{i}. {img.name}")
+
+    try:
+        img_choice = int(input("Selecciona una imagen para abrir (0 para salir): "))
+        if img_choice == 0:
+            return
+        if 1 <= img_choice <= len(images):
+            img_path = images[img_choice - 1]
+            os.startfile(img_path)  # Abre la imagen con el visor predeterminado de Windows
+        else:
+            print("Opción inválida.")
+    except ValueError:
+        print("Entrada inválida.")
+    
+    pausa()
+
+
+def menuOp2():
+    print("Generacion de Graficas.")
+    print("1. Elegir tipo de Graficas")
+    print("2. Mostrar graficas guardadas")
+    print("3. Atrás")
+
 #Funcion para escoger opciones de generacion de Grafica
 def option2():
     while True:
@@ -89,72 +160,28 @@ def option2():
         #Se llama la funcion limpiar para que limpie la pantalla cada vez que escoge
         limpiar()
         if option == 1:
-            #methodData()
-            #MenuTypeOfGrafic()
-            testing()
+            MenuTypeOfGrafic()
         elif option == 2:
-            print("Opcion 2")
+            showGraphs()
         else:
             break
 
 #Funcion para mostrar el menu con el tipo de Grafica y escoger
 def MenuTypeOfGrafic():
-    print("Tipo de Grafica.")
+    print("============================")
+    print("      Generar Graficos")
+    print("============================")
+    print("Tipo de Grafica: ")
     print("1. Gráfico de Barras")
-    print("2. Histograma")
-    print("3. Gráfico de dispersión")
-    print("4. Grafico lineal")
-    print("5. Gráfico Circular")
-    print("6. Atrás")
-    option = int(input("Ingresa una Opción: "))
-     #Se llama la funcion limpiar para que limpie la pantalla cada vez que escoge
+    print("2. Gráfico de dispersión")
+    print("3. Grafico lineal")
+    print("4. Atrás")
+    op = int(input("Ingresa una Opción: "))
     limpiar()
-    while True:
-        if option >= 1 and option <= 6:
-            if option == 1:
-                #methodData()
-                #chartbar(df["Fecha"], df["Valor"])
-                print("")
-            elif option == 2:
-                print("Opcion 2")
-            elif option == 3:
-                print("Opcion 3")
-            elif option == 4:
-                print("Opcion 4")
-            elif option == 5:
-                print("Opcion 5")
-            else:
-                print("Opcion 6")
-                main.mainMenu()
+    if(op >= 1 or op <= 4):
+        createGraph(op)
+    else:
+        print("Opción invalida.")
+        pausa()
         limpiar()
-
-#Funcion para obtener datos del menu de tipos de Graficos
-def methodData():
-    print("Metodo para ingresar Datos.")
-    print("1. Ingresar Datos Manualmente")
-    print("2. Importar Archivo de Excel")
-    print("3. Atrás")
-    while True:
-        option = int(input("Ingresa una Opción: "))
-        limpiar()
-        if option >= 1 and option <= 3:
-            if option == 1:
-                print("NEWFILE")
-                #MenuTypeOfGrafic()
-                pausa()
-            elif option == 2:
-                print("Opcion 2")
-            else:
-                menuOp2()
-                break
-
-
-#Funcion para Generar la Grafica de Barras
-def chartbar(fechas, valores):
-    plt.bar(fechas, valores)
-    plt.title("Gráfico de Barras")
-    plt.xlabel("Fecha")
-    plt.ylabel("Valor")
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    plt.show()
+        MenuTypeOfGrafic()

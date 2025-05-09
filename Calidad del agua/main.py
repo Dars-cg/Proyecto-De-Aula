@@ -31,7 +31,6 @@ while True:
         if opcion == 1:
             option1.option1()
         elif opcion == 2:
-            print("Opcion 2")
             option2.option2()
         elif opcion == 3:
             print("Opcion 3")
