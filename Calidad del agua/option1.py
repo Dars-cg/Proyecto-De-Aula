@@ -32,6 +32,52 @@ def newFile():
     if not fileName:
         print("Error: El nombre no puede estar vacío.")
         pause()
+        getDataMenu()
+
+# Función que se ejecuta si el usuario desea crear un archivo nuevo de datos.
+def newFile():
+    # ========= INGRESO DEL NOMBRE Y VERIFICACIÓN DE ARCHIVO =========
+
+    fileName = input("Ingrese el nombre del archivo: ")  # Solicita el nombre para el nuevo archivo
+    print("")  # jump de línea para mejorar la presentación
+
+    # Se define la carpeta "Datos" usando Path para manejo seguro de rutas
+    folder = Path("Datos")
+    folder.mkdir(exist_ok=True)  # Crea la carpeta si no existe
+
+    # Construye la ruta completa al archivo a crear
+    file = folder / f"{fileName}.xlsx"
+
+    # Verifica si el archivo ya existe. Si existe, reinicia la función (llamada recursiva)
+    if file.exists():
+        print("El archivo ya existe.")
+        newFile()  # Vuelve a pedir un nuevo nombre
+    else:
+        # ========= INGRESO DE DATOS =========
+
+        # Inicializa listas vacías para fechas y valores
+        dates = []
+        values = []
+
+        # Ciclo principal para recolección de datos
+        while True:
+            # Solicita y valida la fecha en formato dd/mm/aa
+            while True:
+                date = input("Ingresa la fecha (formato dd/mm/aa): ")
+                try:
+                    datetime.strptime(date, "%d/%m/%y")  # Valida el formato
+                    break
+                except ValueError:
+                    print("Formato inválido. Usa dd/mm/aa.")
+
+            # Solicita y valida que el valor ingresado sea un número flotante
+            try:
+                value = float(input("Ingresa el valor: "))
+            except ValueError:
+                print("Valor inválido. Intenta de nuevo.")
+                continue  # Vuelve a pedir la fecha y el valor
+
+            # Almacena los datos válidos
         return
 
     # Estructura de carpetas
@@ -82,10 +128,17 @@ def newFile():
 
 # Función para agregar datos a archivo existente
 def addDataToExistingFile():
-    if not config.activeWaterBody:
-        print("Error: No hay ningún cuerpo de agua seleccionado.")
-        pause()
-        return
+    #Damos formato usando la libreria path
+    folder = Path("Datos")
+    #En este array se almacenan los nombres de todos los archivos en la carpeta "Datos" que tengan la extensión ".xlsx".
+    files = [archivo.name for archivo in folder.glob("*.xlsx")]
+    
+    #Si la carpeta está vacia, muestra un mensaje.
+    if not files:
+        if not config.activeWaterBody:
+            print("Error: No hay ningún cuerpo de agua seleccionado.")
+            pause()
+            return
 
     # Obtener lista de archivos
     data_folder = Path("CuerposDeAgua") / config.activeWaterBody / config.data_folder
@@ -100,6 +153,12 @@ def addDataToExistingFile():
         pause()
         return
 
+    #Si hay archivos dentro de la carpeta, imprime la lista en pantalla.
+    print("files existentes:")
+    for i, file in enumerate(files, start=1):
+        print(f"{i}. {file}")
+    
+    # Elegir el archivo.
     # Mostrar archivos disponibles
     print("\nArchivos disponibles:")
     for i, archivo in enumerate(archivos, 1):
@@ -108,9 +167,13 @@ def addDataToExistingFile():
     # Selección de archivo
     while True:
         try:
+            op = int(input("Sselectiona el número del archivo para agregar datos (0 para salir): "))
             op = input("\nSeleccione el archivo (0 para cancelar): ")
             op = int(op)
             if op == 0:
+                return  # Volver al menú anterior.
+            if 1 <= op <= len(files):
+                fileName = files[op - 1]
                 return
             if 1 <= op <= len(archivos):
                 selected_file = archivos[op-1]
@@ -119,6 +182,13 @@ def addDataToExistingFile():
         except ValueError:
             print("Error: Ingrese un número válido")
 
+    # Cargar el archivo sselectionado.
+    file = folder / fileName
+    df = pd.read_excel(file)
+
+    # Mostrar datos actuales del archivo.
+    print(f"\nContenido actual de '{fileName}':")
+    print(df)
     # Cargar archivo existente
     file_path = data_folder / selected_file
     try:
