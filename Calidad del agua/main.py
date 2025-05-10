@@ -1,101 +1,116 @@
+"""
+Sistema de Gestión de Cuerpos de Agua
+Módulo: Menú Principal
+"""
 import os
-import menu
 from pathlib import Path
+import menu
 import config
 from config import config
-#========================
-#Fin de las importaciones (os)
 
-#Funciones para limpiar y hacer pausas en la consola usando la libreria os(Operative System).
-def clean():
-    os.system('cls')#Clear console
-def pause():
+# ======================
+# Funciones de Utilidad
+# ======================
+
+def limpiarConsola():
+    """Limpia la pantalla de la consola"""
+    os.system('cls')
+
+def pausarConsola():
+    """Pausa la ejecución hasta que el usuario presione una tecla"""
     os.system("pause")
 
+# ======================
+# Funciones del Menú
+# ======================
 
-#Función que nos imprime las opciones del menu 1
-def menu1():
-    print("=======================================")
-    print("          Cuidado del agua.")
-    print("=======================================")
-    print("")
-    print("1. Agregar un cuerpo de agua.")
-    print("2. Acceder a un cuerpo de agua.")
-    print("3. Salir.")
-    
-    
+def mostrarMenuPrincipal():
+    """Muestra el menú principal del sistema"""
+    print("======================================")
+    print("SISTEMA DE ANÁLISIS DE CALIDAD DE AGUA     ")
+    print("======================================")
+    print("\n1. Agregar cuerpo de agua")
+    print("2. Acceder a cuerpo de agua existente")
+    print("3. Salir")
 
-def createFolder():
-    # Solicita el nombre del cuerpo de agua
-    waterBodyName = input("Ingrese el nombre del cuerpo de agua: ")
-    folder = Path("CuerposDeAgua") / waterBodyName
+def crearCuerpoAgua():
+    """
+    Crea un nuevo directorio para un cuerpo de agua
+    y lo establece como activo en la configuración
+    """
+    nombre = input("Ingrese el nombre del cuerpo de agua: ")
+    ruta = Path("CuerposDeAgua") / nombre
 
-    # Verifica si la carpeta ya existe
-    if folder.exists():
-        print(f"El cuerpo de agua '{waterBodyName}' ya existe.")
-        return  # Sale de la función sin hacer nada más
-
-    # Si no existe, crea la carpeta
-    folder.mkdir(parents=True, exist_ok=True)
-    config.activeWaterBody = waterBodyName
-    print(f"Se ha agregado '{waterBodyName}' exitosamente!")
-    pause()
-    menu.application()
-    
-    
-def accesFolder():
-    folder = Path("CuerposDeAgua")
-    folders = [fold.name for fold in folder.iterdir() if fold.is_dir()]
-    
-    if not folders:
-        print("No hay archivos disponibles para editar.")
-        pause()
+    if ruta.exists():
+        print(f"\nEl cuerpo de agua '{nombre}' ya existe.")
+        pausarConsola()
         return
-    
-    print("Archivos existentes:")
-    for i, archivo in enumerate(folders, start=1):
-        print(f"{i}. {archivo}")
-    
+
+    ruta.mkdir(parents=True, exist_ok=True)
+    config.activeWaterBody = nombre
+    print(f"\nCuerpo de agua '{nombre}' creado exitosamente!")
+    pausarConsola()
+    menu.ejecutarAplicacion()
+
+def accederCuerpoAgua():
+    """
+    Muestra lista de cuerpos de agua existentes
+    y permite seleccionar uno para trabajar
+    """
+    rutaBase = Path("CuerposDeAgua")
+    rutaBase.mkdir(exist_ok=True)  # Asegura que la carpeta exista
+
+    cuerposAgua = [carpeta.name for carpeta in rutaBase.iterdir() if carpeta.is_dir()]
+
+    if not cuerposAgua:
+        print("\nNo hay cuerpos de agua registrados.")
+        pausarConsola()
+        return
+
+    print("\nCuerpos de agua disponibles:")
+    for i, cuerpo in enumerate(cuerposAgua, 1):
+        print(f"{i}. {cuerpo}")
+
     while True:
         try:
-            op = int(input("Selecciona el número del cuerpo de agua (0 para salir): "))
-            if op == 0:
-                return  # Volver al menú anterior.
-            if 1 <= op <= len(folders):
-                waterBodyName = folders[op - 1]
-                config.activeWaterBody = waterBodyName
+            seleccion = int(input("\nSeleccione un número (0 para cancelar): "))
+            if seleccion == 0:
+                return
+            if 1 <= seleccion <= len(cuerposAgua):
+                cuerpoSeleccionado = cuerposAgua[seleccion - 1]
+                config.activeWaterBody = cuerpoSeleccionado
+                menu.ejecutarAplicacion()
+                break
+            print("Error: Número fuera de rango")
+        except ValueError:
+            print("Error: Debe ingresar un número válido")
+        pausarConsola()
+
+# ======================
+# Bucle Principal
+# ======================
+
+def ejecutarSistema():
+    """Controla el flujo principal de la aplicación"""
+    limpiarConsola()
+    while True:
+        mostrarMenuPrincipal()
+        try:
+            opcion = int(input("\nSeleccione una opción: "))
+            if opcion == 1:
+                crearCuerpoAgua()
+            elif opcion == 2:
+                accederCuerpoAgua()
+            elif opcion == 3:
+                print("Saliendo del sistema...")
                 break
             else:
-                print("Opción inválida. Elige un número válido.")
-                pause()
+                print("Error: Opción debe ser entre 1 y 3")
+                pausarConsola()
         except ValueError:
-            print("Por favor ingresa un número válido.")
-            pause()
-            
-    menu.application()
+            print("Error: Debe ingresar un número válido")
+            pausarConsola()
+        limpiarConsola()
 
-    
-#Ciclo principal en el que estamos corriendo constantemente el menu
-#con la condición de que si la opción no está en el rango permitido
-#no nos permite avanzar.
-clean()
-while True:
-    menu1()
-    opcion = int(input("Ingrese una opcion: "))
-    clean()
-    if opcion >= 1 and opcion <= 5:
-        if opcion == 1:
-            createFolder()
-        elif opcion == 2:
-            accesFolder()
-        elif opcion == 3:
-            clean()
-            print(config.activeWaterBody)
-            pause()
-        else:
-            print("Programa finalizado...")
-            break
-    else:
-        print("Opción invalida.")
-        pause()
-    clean()
+if __name__ == "__main__":
+    ejecutarSistema()

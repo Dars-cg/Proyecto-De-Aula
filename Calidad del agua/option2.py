@@ -1,187 +1,270 @@
+"""
+Sistema de Gestión de Calidad del Agua
+Módulo: Generación y Visualización de Gráficas
+"""
 import os
-from pathlib import Path 
+from pathlib import Path
+from datetime import datetime
 import pandas as pd
 import matplotlib.pyplot as plt
-import numpy as np
-from datetime import datetime
+from config import config
 
-#Funciones para limpiar y hacer pausas en la consola
-def limpiar():
+# ======================
+# Funciones de Utilidad
+# ======================
+
+def limpiarConsola():
+    """Limpia la pantalla de la consola"""
     os.system('cls')
-def pausa():
+
+def pausarConsola():
+    """Pausa la ejecución hasta que el usuario presione una tecla"""
     os.system("pause")
 
-def createGraph(graphType):
-    if(graphType == 4):
-        return
-    
-    folder = Path("Datos")
-    files = [file.name for file in folder.glob("*.xlsx")]
+# ======================
+# Funciones del Menú
+# ======================
 
-    if not files:
-        print("No hay arhcivos disponibles.")
-        return
+def mostrarMenuPrincipalGraficas():
+    """Muestra el menú principal de generación de gráficas"""
+    print("=================================")
+    print("     GENERACIÓN DE GRÁFICAS")
+    print("=================================")
+    print("\n1. Crear nueva gráfica")
+    print("2. Visualizar gráficas guardadas")
+    print("3. Volver al menú anterior")
 
-    print("Archivos disponibles:")
-    for i, file in enumerate(files, start=1):
+def mostrarMenuTipoGrafica():
+    """Muestra los tipos de gráficas disponibles"""
+    print("=========================")
+    print("    TIPO DE GRÁFICA")
+    print("=========================")
+    print("\n1. Gráfico de Barras")
+    print("2. Gráfico de Dispersión")
+    print("3. Gráfico Lineal")
+    print("4. Volver")
+
+# ======================
+# Funciones de Gráficas
+# ======================
+
+def obtenerRutaDatos():
+    """Retorna la ruta a la carpeta de datos del cuerpo de agua activo"""
+    return Path(f"CuerposDeAgua/{config.activeWaterBody}/Datos")
+
+def obtenerRutaGraficas(tipo=None):
+    """Retorna la ruta a la carpeta de gráficas"""
+    base = Path(f"CuerposDeAgua/{config.activeWaterBody}/Graficas")
+    if tipo:
+        return base / tipo
+    return base
+
+def seleccionarArchivo(files, mensaje):
+    """Permite al usuario seleccionar un archivo de la lista"""
+    print("\nArchivos disponibles:")
+    for i, file in enumerate(files, 1):
         print(f"{i}. {file}")
 
     while True:
         try:
-            # Solicita al usuario que elija un archivo por su número
-            op = int(input("Sselectiona el número del archivo a graficar (0 para salir): "))
-            if op == 0:
-                return  # Sale si elige 0
-            if 1 <= op <= len(files):
-                fileName = files[op - 1]  # Guarda el nombre del archivo sselectionado
-                break
-            else:
-                print("Opción inválida.")  # Si el número está fuera de rango
+            opcion = int(input(f"\n{mensaje} (0 para cancelar): "))
+            if opcion == 0:
+                return None
+            if 1 <= opcion <= len(files):
+                return files[opcion-1]
+            print("Error: Número fuera de rango")
         except ValueError:
-            print("Por favor ingresa un número válido.")  # Si se ingresa un valor no numérico
+            print("Error: Ingrese un número válido")
 
-    filePath = folder / fileName 
-    df = pd.read_excel(filePath)
-
-    column1 = df['Fecha']
-    #Parseado de columna de dataframe a numpy
-    dates = column1.to_numpy()
-    column2 = df['Valor']
-    #Parseado de columna de dataframe a numpy
-    values = column2.to_numpy()
-    print(dates)
-    print(values)
-
-    extension = ".xlsx"
-
-    ylable = fileName.replace(extension, "")
-
-    fig, ax = plt.subplots()
-    if(graphType == 1):
-        ax.bar(dates, values)
-        subfolder = "Barra"
-    elif(graphType == 2):
-        ax.scatter(dates, values)
-        subfolder = "Dispersion"
-    elif(graphType == 3):
-        ax.plot(dates, values)
-        subfolder = "Lineal"
-    else:
-        print("Opción invalida")
+def crearGrafica(tipo_grafica):
+    """Crea y guarda una gráfica según el tipo seleccionado"""
+    if not config.activeWaterBody:
+        print("Error: No hay cuerpo de agua seleccionado")
+        pausarConsola()
         return
 
-    ax.set_title(fileName)
+    # Obtener lista de archivos disponibles
+    ruta_datos = obtenerRutaDatos()
+    if not ruta_datos.exists():
+        print("Error: No hay datos disponibles.")
+        pausarConsola()
+        return
+
+    archivos = [archivo.name for archivo in ruta_datos.glob("*.xlsx")]
+    if not archivos:
+        print("No hay archivos disponibles")
+        pausarConsola()
+        return
+
+    # Seleccionar archivo
+    archivo_seleccionado = seleccionarArchivo(archivos, "Seleccione archivo a graficar")
+    if not archivo_seleccionado:
+        return
+
+    # Leer datos
+    ruta_archivo = ruta_datos / archivo_seleccionado
+    try:
+        df = pd.read_excel(ruta_archivo)
+        fechas = df['Fecha'].to_numpy()
+        valores = df['Valor'].to_numpy()
+    except Exception as e:
+        print(f"Error al leer archivo: {e}")
+        pausarConsola()
+        return
+
+    # Configurar gráfico
+    fig, ax = plt.subplots()
+    nombre_archivo = archivo_seleccionado.replace(".xlsx", "")
+
+    # Crear gráfico según tipo seleccionado
+    tipos = {
+        1: ("Barras", lambda: ax.bar(fechas, valores)),
+        2: ("Dispersion", lambda: ax.scatter(fechas, valores)),
+        3: ("Lineal", lambda: ax.plot(fechas, valores, marker='o'))
+    }
+
+    if tipo_grafica not in tipos:
+        print("Error: Tipo de gráfica inválido")
+        pausarConsola()
+        return
+
+    nombre_tipo, funcion_grafica = tipos[tipo_grafica]
+    funcion_grafica()
+
+    # Configuración del gráfico
+    ax.set_title(nombre_archivo)
     ax.set_xlabel("Fecha")
-    ax.set_ylabel(ylable)
+    ax.set_ylabel(nombre_archivo)
     ax.grid(True)
 
-    graphFolder = Path("Graficas") / subfolder
-    graphFolder.mkdir(parents=True, exist_ok=True)
+    # Guardar gráfico
+    ruta_graficas = obtenerRutaGraficas(nombre_tipo)
+    ruta_graficas.mkdir(parents=True, exist_ok=True)
 
-    date = datetime.now() 
-    safe_date = date.strftime("%d-%m-%y_%H-%M-%S")
-    figName = f"{ylable}-{safe_date}.png"
-    figPath = graphFolder / figName
-    plt.savefig(figPath)
+    timestamp = datetime.now().strftime("%d-%m-%y_%H-%M-%S")
+    nombre_grafica = f"{nombre_archivo}-{timestamp}.png"
+    ruta_completa = ruta_graficas / nombre_grafica
 
+    plt.savefig(ruta_completa)
     plt.show()
-    pausa()
+    print(f"\nGràfica guardada en: {ruta_completa}")
+    pausarConsola()
 
-def showGraphs():
-    graph_base = Path("Graficas")
-
-    if not graph_base.exists():
-        print("No hay carpeta de gráficas.")
-        pausa()
+def visualizarGraficas():
+    """Muestra las gráficas guardadas y permite visualizarlas"""
+    if not config.activeWaterBody:
+        print("Error: No hay cuerpo de agua seleccionado")
+        pausarConsola()
         return
 
-    subfolders = [f for f in graph_base.iterdir() if f.is_dir()]
-    if not subfolders:
-        print("No hay subcarpetas de gráficas disponibles.")
-        pausa()
+    ruta_base = obtenerRutaGraficas()
+    if not ruta_base.exists():
+        print("No hay gráficas guardadas")
+        pausarConsola()
         return
 
-    print("Tipos de gráficas guardadas:")
-    for i, folder in enumerate(subfolders, start=1):
-        print(f"{i}. {folder.name}")
-    
+    # Listar tipos de gráficas disponibles
+    carpetas = [carpeta for carpeta in ruta_base.iterdir() if carpeta.is_dir()]
+    if not carpetas:
+        print("No hay gráficas guardadas")
+        pausarConsola()
+        return
+
+    print("\nTipos de gráficas disponibles:")
+    for i, carpeta in enumerate(carpetas, 1):
+        print(f"{i}. {carpeta.name}")
+
+    # Seleccionar tipo de gráfica
     try:
-        folder_choice = int(input("Selecciona una carpeta (0 para salir): "))
-        if folder_choice == 0:
+        opcion = int(input("\nSeleccione tipo (0 para cancelar): "))
+        if opcion == 0:
             return
-        if 1 <= folder_choice <= len(subfolders):
-            selected_folder = subfolders[folder_choice - 1]
-        else:
-            print("Opción inválida.")
-            pausa()
+        if not 1 <= opcion <= len(carpetas):
+            print("Error: Opción inválida")
+            pausarConsola()
             return
     except ValueError:
-        print("Entrada inválida.")
-        pausa()
+        print("Error: Ingrese un número válido")
+        pausarConsola()
         return
 
-    images = list(selected_folder.glob("*.png"))
-    if not images:
-        print("No hay imágenes en esta carpeta.")
-        pausa()
+    carpeta_seleccionada = carpetas[opcion - 1]
+    graficas = list(carpeta_seleccionada.glob("*.png"))
+
+    # Ordenar por fecha de modificación (más reciente primero)
+    graficas.sort(key=lambda x: x.stat().st_mtime, reverse=True)
+
+    if not graficas:
+        print(f"No hay gráficas en {carpeta_seleccionada.name}")
+        pausarConsola()
         return
 
-    print(f"Imágenes en {selected_folder.name}:")
-    for i, img in enumerate(images, start=1):
-        print(f"{i}. {img.name}")
-
+    # Mostrar gráficas disponibles
+    print(f"\nGráficas disponibles en {carpeta_seleccionada.name}:")
+    for i, grafica in enumerate(graficas, 1):
+        print(f"{i}. {grafica.name}")
+    # Seleccionar gráfica para visualizar
     try:
-        img_choice = int(input("Selecciona una imagen para abrir (0 para salir): "))
-        if img_choice == 0:
+        opcion = int(input("\nSeleccione gráfica (0 para cancelar): "))
+        if opcion == 0:
             return
-        if 1 <= img_choice <= len(images):
-            img_path = images[img_choice - 1]
-            os.startfile(img_path)  # Abre la imagen con el visor predeterminado de Windows
+        if 1 <= opcion <= len(graficas):
+            grafica_seleccionada = graficas[opcion-1]
+            os.startfile(grafica_seleccionada)  # Abre con visor predeterminado
         else:
-            print("Opción inválida.")
+            print("Error: Opción inválida")
     except ValueError:
-        print("Entrada inválida.")
+        print("Error: Ingrese un número válido")
     
-    pausa()
+    pausarConsola()
 
+# ======================
+# Flujo Principal
+# ======================
 
-def menuOp2():
-    print("Generacion de Graficas.")
-    print("1. Elegir tipo de Graficas")
-    print("2. Mostrar graficas guardadas")
-    print("3. Atrás")
-
-#Funcion para escoger opciones de generacion de Grafica
-def option2():
+def menuTipoGrafica():
+    """Maneja la selección del tipo de gráfica"""
     while True:
-        limpiar()
-        menuOp2()
-        option = int(input("Ingrese una opcion: "))
-        #Se llama la funcion limpiar para que limpie la pantalla cada vez que escoge
-        limpiar()
-        if option == 1:
-            MenuTypeOfGrafic()
-        elif option == 2:
-            showGraphs()
-        else:
-            break
+        limpiarConsola()
+        mostrarMenuTipoGrafica()
+        
+        try:
+            opcion = int(input("\nSeleccione opción: "))
+            limpiarConsola()
+            
+            if 1 <= opcion <= 3:
+                crearGrafica(opcion)
+            elif opcion == 4:
+                break
+            else:
+                print("Error: Opción inválida")
+                pausarConsola()
+        except ValueError:
+            print("Error: Ingrese un número válido")
+            pausarConsola()
 
-#Funcion para mostrar el menu con el tipo de Grafica y escoger
-def MenuTypeOfGrafic():
-    print("============================")
-    print("      Generar Graficos")
-    print("============================")
-    print("Tipo de Grafica: ")
-    print("1. Gráfico de Barras")
-    print("2. Gráfico de dispersión")
-    print("3. Grafico lineal")
-    print("4. Atrás")
-    op = int(input("Ingresa una Opción: "))
-    limpiar()
-    if(op >= 1 or op <= 4):
-        createGraph(op)
-    else:
-        print("Opción invalida.")
-        pausa()
-        limpiar()
-        MenuTypeOfGrafic()
+def ejecutarOpcion2():
+    """Controla el flujo principal de la opción 2"""
+    while True:
+        limpiarConsola()
+        mostrarMenuPrincipalGraficas()
+        
+        try:
+            opcion = int(input("\nSeleccione opción: "))
+            limpiarConsola()
+            
+            if opcion == 1:
+                menuTipoGrafica()
+            elif opcion == 2:
+                visualizarGraficas()
+            elif opcion == 3:
+                break
+            else:
+                print("Error: Opción inválida")
+                pausarConsola()
+        except ValueError:
+            print("Error: Ingrese un número válido")
+            pausarConsola()
+
+if __name__ == "__main__":
+    ejecutarOpcion2()
