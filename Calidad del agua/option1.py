@@ -73,7 +73,7 @@ def mostrarMenuIngresoDatos():
 
 def obtenerRutaDatos():
     """Retorna la ruta a la carpeta de datos del cuerpo de agua activo"""
-    return Path("CuerposDeAgua") / config.activeWaterBody / config.data_folder
+    return Path("CuerposDeAgua") / config.activeWaterBody / config.data_folder #CuerposDeAgua/Lago de bonanza/Datos
 
 def listarArchivosDisponibles():
     """Lista los archivos Excel disponibles en la carpeta de datos"""

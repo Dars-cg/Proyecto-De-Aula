@@ -27,7 +27,7 @@ def pausarConsola():
 def mostrarMenuPrincipal():
     """Muestra el menú principal del sistema"""
     print("======================================")
-    print("SISTEMA DE ANÁLISIS DE CALIDAD DE AGUA     ")
+    print("SISTEMA DE ANÁLISIS DE CALIDAD DE AGUA ")
     print("======================================")
     print("\n1. Agregar cuerpo de agua")
     print("2. Acceder a cuerpo de agua existente")

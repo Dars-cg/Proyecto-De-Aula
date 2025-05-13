@@ -1,6 +1,7 @@
 import os
 import option1
 import option2
+import option3
 #========================
 #Fin de las importaciones (os)
 
@@ -9,7 +10,6 @@ def limpiarConsola():
     os.system('cls')#Clear console
 def pausarConsola():
     os.system("pause")
-
 
 
 #Función que nos imprime las opciones del menu 2
@@ -40,7 +40,7 @@ def ejecutarAplicacion():
             elif opcion == 2:
                 option2.ejecutarOpcion2()
             elif opcion == 3:
-                print("Opcion 3")
+                option3.ejecutarOpcion3()
             elif opcion == 4:
                 print("Opcion 4")
             else:
