@@ -38,7 +38,8 @@ def crearReportes():
     nombreArchivo = "Reporte_" + titulo + "_" + fechaActual + ".txt"
     ruta = obtenerRuta(nombreArchivo)
     ruta.parent.mkdir(parents=True, exist_ok=True)
-    contenido = "Hola mundo"
+    texto = input("Ingresa el contenido del reporte: ")
+    contenido = titulo + "\n" + texto
     with open(ruta, "w") as archivo:
         archivo.write(contenido)
     print(f"\nReporte guardado.")
@@ -105,14 +106,17 @@ def eliminarReportes():
         elif(op <= len(listaReportes)):
             ruta = obtenerRuta(listaReportes[op-1])
             while True:
-                op = input("¿Seguro que deseas eliminarlo? (SI/NO):")
+                op = input("¿Seguro que deseas eliminarlo? (SI/NO): ")
 
-                if(op.capitalize() == "SI"):
+                if(op == "SI"):
                     os.remove(ruta)
                     print("Archivo eliminado correctamente.")
-                elif(op.capitalize() == "NO"):
+                    return
+                elif(op == "NO"):
                     print("No se elimino el archivo.")
                     return
+                else:
+                    print("Error: Opción invalida.")
             break
         else:
             print("Error: Opción invalida.")
