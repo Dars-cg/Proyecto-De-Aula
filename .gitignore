@@ -1,0 +1,36 @@
+
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Caches
+*.cache
+
+# Virtual environment
+env/
+venv/
+ENV/
+.venv/
+.ENV/
+
+# VSCode settings
+.vscode/
+
+# Pytest cache
+.pytest_cache/
+
+# MyPy
+.mypy_cache/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Mac OS
+.DS_Store
+
+# Logs
+*.log
+
+# Env files
+.env
+.env.*
