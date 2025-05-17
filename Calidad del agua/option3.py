@@ -5,15 +5,15 @@ from pathlib import Path
 from datetime import datetime, timedelta
 
 def limpiarConsola():
-    """Limpia la pantalla de la consola"""
+    #Limpia la pantalla de la consola 
     os.system('cls')
 
 def pausarConsola():
-    """Pausa la ejecución hasta que el usuario presione una tecla"""
+    #Pausa la ejecución hasta que el usuario presione una tecla 
     os.system("pause")
 
 def menuReportes():
-    """Muestra el menú principal de evaluación de calidad"""
+    #Muestra el menú principal de evaluación de calidad 
     print("\n" + "="*40)
     print("               REPORTES")
     print("="*40)
@@ -45,11 +45,11 @@ def crearReportes():
     print(f"\nReporte guardado.")
 
 def listarArchivosDisponibles():
-    """Lista los archivos Excel disponibles en la carpeta de datos"""
-    ruta_datos = obtenerRuta("")
-    if not ruta_datos.exists():
+    #Lista los archivos Excel disponibles en la carpeta de datos 
+    rutaDatos = obtenerRuta("")
+    if not rutaDatos.exists():
         return None
-    return [archivo.name for archivo in ruta_datos.glob("*.txt")]
+    return [archivo.name for archivo in rutaDatos.glob("*.txt")]
 
 
 def mostrarReportes():
@@ -117,7 +117,7 @@ def eliminarReportes():
                     return
                 else:
                     print("Error: Opción invalida.")
-            break
+                    break
         else:
             print("Error: Opción invalida.")
 
