@@ -106,11 +106,12 @@ def mostrarMenuPrincipal():
     print("="*40)
     print(f"\nCuerpo de agua activo: {config.activeWaterBody or 'Ninguno'}")
     print("\n1. Ingresar datos de parámetros")
-    print("2. Evaluar parámetros actuales")
+    print("2. Editar un registro")
     print("3. Visualizar datos")
-    print("4. Realizar predicciones")
-    print("5. Evaluación de la calidad segun el ICA")
-    print("6. Volver al menú anterior")
+    print("4. Evaluar parámetros actuales")
+    print("5. Realizar predicciones")
+    print("6. Evaluación de la calidad segun el ICA")
+    print("7. Volver al menú anterior")
 
 def mostrarMenuIngresoDatos():
     #Muestra el submenú para ingreso de datos
@@ -252,6 +253,103 @@ def crearNuevoArchivo():
     #Se crea el archivo de excel en la ruta definida anteriormente
     df.to_excel(rutaArchivo, index=False)
     print(f"\nArchivo '{nombreArchivo}' creado con {len(df)} registros.")
+    pausarConsola()
+    
+
+def editarValorExistente():
+    #Permite editar un valor específico en un archivo de parámetro existente
+    
+    # Verificación de cuerpo de agua activo
+    if not config.activeWaterBody:
+        print("Error: No hay cuerpo de agua seleccionado")
+        pausarConsola()
+        return
+
+    # Obtener lista de archivos disponibles
+    archivos = listarArchivosDisponibles()
+    if not archivos:
+        print("No hay archivos de parámetros disponibles para editar")
+        pausarConsola()
+        return
+
+    # Selección de archivo
+    archivoSeleccionado = seleccionarArchivo(archivos, "Seleccione parámetro para editar")
+    if not archivoSeleccionado:
+        return
+
+    # Cargar datos
+    rutaArchivo = obtenerRutaDatos() / archivoSeleccionado
+    try:
+        df = pd.read_excel(rutaArchivo)
+        parametro = str(archivoSeleccionado).replace("DATOS_", "").replace("_", " ").replace(".xlsx", "")
+    except Exception as e:
+        print(f"Error al leer archivo: {e}")
+        pausarConsola()
+        return
+    
+    # Mostrar datos con índices
+    print(f"\nDatos actuales de {parametro}:")
+    print("Índice | Fecha       | Valor")
+    print("---------------------------")
+    for i, fila in df.iterrows():
+        print(f"{i:6} | {fila['Fecha']:10} | {fila['Valor']}")
+    
+    # Selección de registro a editar
+    while True:
+        try:
+            indice = int(input("\nIngrese el índice del valor a editar (0 para cancelar): "))
+            if indice == 0:
+                return
+            if 0 <= indice < len(df):
+                break
+            print("Error: Índice fuera de rango")
+        except ValueError:
+            print("Error: Ingrese un número válido")
+
+    # Edición de valores
+    registro = df.loc[indice]
+    print(f"\nEditando registro {indice}:")
+    print(f"Fecha actual: {registro['Fecha']}")
+    print(f"Valor actual: {registro['Valor']} {PARAMETROS_CALIDAD.get(parametro, {}).get('unidades', '')}")
+    
+    # Edición de fecha
+    while True:
+        nueva_fecha = input("\nNueva fecha (dd/mm/aa) [Enter para mantener actual]: ").strip()
+        if not nueva_fecha:
+            break
+        try:
+            datetime.strptime(nueva_fecha, "%d/%m/%y")
+            df.at[indice, 'Fecha'] = nueva_fecha
+            break
+        except ValueError:
+            print("Error: Formato inválido. Use dd/mm/aa")
+
+    # Edición de valor
+    while True:
+        nuevo_valor = input("Nuevo valor [Enter para mantener actual]: ").strip()
+        if not nuevo_valor:
+            break
+        try:
+            nuevo_valor = float(nuevo_valor)
+            df.at[indice, 'Valor'] = nuevo_valor
+            break
+        except ValueError:
+            print("Error: Ingrese un valor numérico válido")
+
+    # Guardar cambios
+    try:
+        df.to_excel(rutaArchivo, index=False)
+        print("\n¡Cambios guardados exitosamente!")
+        
+        # Mostrar registro actualizado
+        registro_actualizado = df.loc[indice]
+        print("\nRegistro actualizado:")
+        print(f"Fecha: {registro_actualizado['Fecha']}")
+        print(f"Valor: {registro_actualizado['Valor']} {PARAMETROS_CALIDAD.get(parametro, {}).get('unidades', '')}")
+        
+    except Exception as e:
+        print(f"\nError al guardar cambios: {e}")
+    
     pausarConsola()
 
 def agregarDatosExistente():
@@ -811,20 +909,22 @@ def ejecutarOpcion1():
         limpiarConsola()
         mostrarMenuPrincipal()
         
-        opcion = seleccionarOpcion("Seleccione opción", 6)
+        opcion = seleccionarOpcion("Seleccione opción", 7)
         limpiarConsola()
         
         if opcion == 1:
             menuIngresoDatos()
         elif opcion == 2:
-            evaluarParametros()
+            editarValorExistente()
         elif opcion == 3:
             visualizarArchivo()
         elif opcion == 4:
-            realizarPredicciones()
+            evaluarParametros()
         elif opcion == 5:
-            evaluarCalidadICA()
+            realizarPredicciones()
         elif opcion == 6:
+            evaluarCalidadICA()
+        elif opcion == 7:
             break
 
 if __name__ == "__main__":
