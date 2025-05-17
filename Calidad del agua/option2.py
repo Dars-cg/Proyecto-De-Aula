@@ -77,7 +77,7 @@ def seleccionarArchivo(arvhivos, mensaje):
             print("Error: Ingrese un número válido")
 
 def crearGrafica(tipoGrafica):
-    #Crea y guarda una gráfica según el tipo seleccionado 
+    """Crea y guarda una gráfica según el tipo seleccionado con opción de invertir eje X (fechas)"""
     if not config.activeWaterBody:
         print("Error: No hay cuerpo de agua seleccionado")
         pausarConsola()
@@ -105,7 +105,10 @@ def crearGrafica(tipoGrafica):
     rutaArchivo = rutaDatos / archivoSeleccionado
     try:
         df = pd.read_excel(rutaArchivo)
-        fechas = df['Fecha'].to_numpy()
+        # Convertir fechas a datetime para ordenamiento correcto
+        df['Fecha'] = pd.to_datetime(df['Fecha'], format='%d/%m/%y')
+        df = df.sort_values('Fecha')  # Ordenar por fecha
+        fechas = df['Fecha']
         valores = df['Valor'].to_numpy()
     except Exception as e:
         print(f"Error al leer archivo: {e}")
@@ -113,7 +116,7 @@ def crearGrafica(tipoGrafica):
         return
 
     # Configurar gráfico
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=(10, 6))
     nombreArchivo = archivoSeleccionado.replace(".xlsx", "")
 
     # Crear gráfico según tipo seleccionado
@@ -136,6 +139,15 @@ def crearGrafica(tipoGrafica):
     ax.set_xlabel("Fecha")
     ax.set_ylabel(nombreArchivo)
     ax.grid(True)
+    
+    # Formatear fechas para mejor visualización
+    plt.xticks(rotation=45)
+    fig.autofmt_xdate()
+    
+    # Preguntar si desea invertir el eje X (fechas)
+    invertir = input("\n¿Desea invertir el eje de fechas (mostrar más recientes primero)? (s/n): ").lower()
+    if invertir == 's':
+        ax.invert_xaxis()
 
     # Guardar gráfico
     rutaGraficas = obtenerRutaGraficas(nombreTipo)
@@ -145,11 +157,13 @@ def crearGrafica(tipoGrafica):
     nombreGrafica = f"{nombreArchivo}-{timestamp}.png"
     rutaCompleta = rutaGraficas / nombreGrafica
 
+    plt.tight_layout()  # Ajustar layout para que no se corten las etiquetas
     plt.savefig(rutaCompleta)
     plt.show()
-    print(f"\nGràfica guardada en: {rutaCompleta}")
+    print(f"\nGráfica guardada en: {rutaCompleta}")
     pausarConsola()
-
+    
+    
 def visualizarGraficas():
     #Muestra las gráficas guardadas y permite visualizarlas 
     if not config.activeWaterBody:
