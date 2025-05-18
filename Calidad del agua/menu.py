@@ -42,7 +42,7 @@ def ejecutarAplicacion():
             elif opcion == 3:
                 option3.ejecutarOpcion3()
             elif opcion == 4:
-                print("Opcion 4")
+                option1.definirDiagramaPareto()
             else:
                 print("Programa finalizado...")
                 break
