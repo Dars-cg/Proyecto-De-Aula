@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 # Constantes y Configuraciones
 # ======================
 
+#Lista de parametros de calidad, con su correspondiente unidad, rango, descripción y recomendación segun el ICA
 #Paremtros de Calidad Utilizados en el Standar ICA - NSF(National Sanation Fundation)
 PARAMETROS_CALIDAD = {
     "pH": {
@@ -84,15 +85,15 @@ PARAMETROS_CALIDAD = {
 # ======================
 
 def limpiarConsola():
-    """Limpia la pantalla de la consola"""
+    #Limpia la pantalla de la consola
     os.system('cls')
 
 def pausarConsola():
-    """Pausa la ejecución hasta que el usuario presione una tecla"""
+    #Pausa la ejecución hasta que el usuario presione una tecla
     os.system("pause")
 
 def formatearNombreArchivo(parametro):
-    """Convierte un nombre de parámetro a formato de nombre de archivo"""
+    #Convierte un nombre de parámetro a formato de nombre de archivo
     return f"DATOS_{parametro.replace(' ', '_').replace('(', '').replace(')', '')}.xlsx"
 
 # ======================
@@ -100,20 +101,21 @@ def formatearNombreArchivo(parametro):
 # ======================
 
 def mostrarMenuPrincipal():
-    """Muestra el menú principal de evaluación de calidad"""
+    #Muestra el menú principal de evaluación de calidad
     print("\n" + "="*40)
     print("    EVALUACIÓN DE CALIDAD DEL AGUA")
     print("="*40)
     print(f"\nCuerpo de agua activo: {config.activeWaterBody or 'Ninguno'}")
     print("\n1. Ingresar datos de parámetros")
-    print("2. Evaluar parámetros actuales")
+    print("2. Editar un registro")
     print("3. Visualizar datos")
-    print("4. Realizar predicciones")
-    print("5. Evaluación de la calidad segun el ICA")
-    print("6. Volver al menú anterior")
+    print("4. Evaluar parámetros actuales")
+    print("5. Realizar predicciones")
+    print("6. Evaluación de la calidad segun el ICA")
+    print("7. Volver al menú anterior")
 
 def mostrarMenuIngresoDatos():
-    """Muestra el submenú para ingreso de datos"""
+    #Muestra el submenú para ingreso de datos
     print("\n" + "="*40)
     print("     INGRESO DE DATOS")
     print("="*40)
@@ -121,44 +123,43 @@ def mostrarMenuIngresoDatos():
     print("2. Agregar datos a parámetro existente")
     print("3. Volver")
 
-# ======================
+# =================================
 # Funciones de Gestión de Archivos
-# ======================
-
-def normalizar_parametro(nombre):
-    import re
-    nombre = re.sub(r"[()]", "", nombre)
-    nombre = " ".join(nombre.split())
-    return nombre
+# =================================
 
 def obtenerRutaDatos():
-    """Retorna la ruta a la carpeta de datos del cuerpo de agua activo"""
+    #Retorna la ruta a la carpeta de datos del cuerpo de agua activo
     return Path("CuerposDeAgua") / config.activeWaterBody / config.data_folder #CuerposDeAgua/Lago de bonanza/Datos
 
 def listarArchivosDisponibles():
-    """Lista los archivos Excel disponibles en la carpeta de datos"""
-    ruta_datos = obtenerRutaDatos()
-    if not ruta_datos.exists():
+    #Lista los archivos Excel disponibles en la carpeta de datos
+    rutaDatos = obtenerRutaDatos()
+    #Si la carpeta no existe, retorna none
+    if not rutaDatos.exists():
         return None
-    return [archivo.name for archivo in ruta_datos.glob("*.xlsx")]
+    #============================================================
+    #Si si existe, retorna una lista con los nombres de los archivos terminados en .xlsx en la carpeta Datos
+    return [archivo.name for archivo in rutaDatos.glob("*.xlsx")]
 
-def seleccionarOpcion(mensaje, max_opcion):
-    """Maneja la selección de opciones del usuario"""
+def seleccionarOpcion(mensaje, maxOpcion):
+    #Maneja la selección de opciones del usuario
     while True:
         try:
             opcion = int(input(f"\n{mensaje} (0 para cancelar): "))
-            if 0 <= opcion <= max_opcion:
+            if 0 <= opcion <= maxOpcion:
                 return opcion
             print("Error: Número fuera de rango")
         except ValueError:
             print("Error: Ingrese un número válido")
 
 def seleccionarArchivo(archivos, mensaje):
-    """Permite al usuario seleccionar un archivo de la lista"""
+    #Permite al usuario seleccionar un archivo de la lista
     print("\nArchivos disponibles:")
+    #Ciclo que enumera los archivos disponibles
     for i, archivo in enumerate(archivos, 1):
         print(f"{i}. {archivo}")
     
+    #Se le pide al usuario la opción
     opcion = seleccionarOpcion(mensaje, len(archivos))
     if opcion == 0:
         return None
@@ -169,7 +170,7 @@ def seleccionarArchivo(archivos, mensaje):
 # ======================
 
 def seleccionarParametro():
-    """Muestra lista de parámetros y permite seleccionar uno"""
+    #Muestra lista de parámetros y permite seleccionar uno
     print("\nParámetros de calidad disponibles:")
     for i, parametro in enumerate(PARAMETROS_CALIDAD.keys(), 1):
         print(f"{i}. {parametro}")
@@ -180,34 +181,44 @@ def seleccionarParametro():
     return list(PARAMETROS_CALIDAD.keys())[opcion-1]
 
 def crearNuevoArchivo():
-    """Crea un nuevo archivo de datos para un parámetro específico"""
+    #Crea un nuevo archivo de datos para un parámetro específico
     if not config.activeWaterBody:
         print("Error: No hay cuerpo de agua seleccionado")
         pausarConsola()
         return
 
+    #Se almacena en una variable el parametro seleccionado
     parametro = seleccionarParametro()
+    #Si no existe, corta la ejecución de la función
     if not parametro:
         return
 
-    nombre_archivo = formatearNombreArchivo(parametro)
-    ruta_datos = obtenerRutaDatos()
-    ruta_datos.mkdir(parents=True, exist_ok=True)
-    ruta_archivo = ruta_datos / nombre_archivo
+    #Se llama a la función para formatear el nombre del archivo
+    nombreArchivo = formatearNombreArchivo(parametro)
+    #Obtenemos la ruta Datos
+    rutaDatos = obtenerRutaDatos()
+    #Si no existe, creala
+    rutaDatos.mkdir(parents=True, exist_ok=True)
+    #La ruta del archivo es Datos nombreArchivo.xlsx
+    rutaArchivo = rutaDatos / nombreArchivo
 
-    if ruta_archivo.exists():
+    #Si el archivo ya existe, imprimir en pantalla
+    if rutaArchivo.exists():
         print(f"\nEl archivo para {parametro} ya existe. Use la opción 'Agregar datos'")
         pausarConsola()
         return
 
+    #Se definen dos listas, que corresponden a las columnas de nuestro data frame
     fechas = []
     valores = []
 
+    #Mensajes para el usuario
     print(f"\nIngrese datos para {parametro} (deje la fecha vacía para terminar):")
     print(f"Unidades: {PARAMETROS_CALIDAD[parametro]['unidades']}")
     print(f"Rango ideal: {PARAMETROS_CALIDAD[parametro]['rango_normal']}")
     print(f"Unidades: {PARAMETROS_CALIDAD[parametro]['descripcion']}")
     
+    #Ciclo que pide fechas y valores y valida el formato de cada uno de estos hastas que se deja la fecha vacia
     while True:
         fecha = input("\nFecha (dd/mm/aa): ").strip()
         if not fecha:
@@ -226,61 +237,178 @@ def crearNuevoArchivo():
         except ValueError:
             print("Error: Ingrese un valor numérico válido")
 
+    #Si no hay fechas, quiere decir que no se ingreso ningun dato
     if not fechas:
         print("No se ingresaron datos. Archivo no creado.")
         pausarConsola()
+        #Se corta la ejecución de la función
         return
 
+    #Definimos el data frame que es igual lo que retorna la función DataFrame de la libreria pandas
+    #Que tiene como parametro un objeto con las fechas y los valores dados por el usuario
     df = pd.DataFrame({
         "Fecha": fechas,
         "Valor": valores,
     })
     
-    df.to_excel(ruta_archivo, index=False)
-    print(f"\nArchivo '{nombre_archivo}' creado con {len(df)} registros.")
+    #Se crea el archivo de excel en la ruta definida anteriormente
+    df.to_excel(rutaArchivo, index=False)
+    print(f"\nArchivo '{nombreArchivo}' creado con {len(df)} registros.")
     pausarConsola()
+    
 
-def agregarDatosExistente():
-    """Agrega datos a un archivo de parámetro existente"""
+def editarValorExistente():
+    #Permite editar un valor específico en un archivo de parámetro existente
+    
+    # Verificación de cuerpo de agua activo
     if not config.activeWaterBody:
         print("Error: No hay cuerpo de agua seleccionado")
         pausarConsola()
         return
 
+    # Obtener lista de archivos disponibles
     archivos = listarArchivosDisponibles()
     if not archivos:
-        print("No hay archivos de parámetros disponibles")
+        print("No hay archivos de parámetros disponibles para editar")
         pausarConsola()
         return
 
-    archivo_seleccionado = seleccionarArchivo(archivos, "Seleccione parámetro para editar")
-    if not archivo_seleccionado:
+    # Selección de archivo
+    archivoSeleccionado = seleccionarArchivo(archivos, "Seleccione parámetro para editar")
+    if not archivoSeleccionado:
         return
 
-    ruta_archivo = obtenerRutaDatos() / archivo_seleccionado
+    # Cargar datos
+    rutaArchivo = obtenerRutaDatos() / archivoSeleccionado
     try:
-        df = pd.read_excel(ruta_archivo)
-
-        parametro = str(archivo_seleccionado).replace("DATOS_", "").replace("_", " ").replace(".xlsx", "")
-
+        df = pd.read_excel(rutaArchivo)
+        parametro = str(archivoSeleccionado).replace("DATOS_", "").replace("_", " ").replace(".xlsx", "")
     except Exception as e:
         print(f"Error al leer archivo: {e}")
         pausarConsola()
         return
+    
+    # Mostrar datos con índices
+    print(f"\nDatos actuales de {parametro}:")
+    print("Índice | Fecha       | Valor")
+    print("---------------------------")
+    for i, fila in df.iterrows():
+        print(f"{i:6} | {fila['Fecha']:10} | {fila['Valor']}")
+    
+    # Selección de registro a editar
+    while True:
+        try:
+            indice = int(input("\nIngrese el índice del valor a editar (0 para cancelar): "))
+            if indice == 0:
+                return
+            if 0 <= indice < len(df):
+                break
+            print("Error: Índice fuera de rango")
+        except ValueError:
+            print("Error: Ingrese un número válido")
+
+    # Edición de valores
+    registro = df.loc[indice]
+    print(f"\nEditando registro {indice}:")
+    print(f"Fecha actual: {registro['Fecha']}")
+    print(f"Valor actual: {registro['Valor']} {PARAMETROS_CALIDAD.get(parametro, {}).get('unidades', '')}")
+    
+    # Edición de fecha
+    while True:
+        nueva_fecha = input("\nNueva fecha (dd/mm/aa) [Enter para mantener actual]: ").strip()
+        if not nueva_fecha:
+            break
+        try:
+            datetime.strptime(nueva_fecha, "%d/%m/%y")
+            df.at[indice, 'Fecha'] = nueva_fecha
+            break
+        except ValueError:
+            print("Error: Formato inválido. Use dd/mm/aa")
+
+    # Edición de valor
+    while True:
+        nuevo_valor = input("Nuevo valor [Enter para mantener actual]: ").strip()
+        if not nuevo_valor:
+            break
+        try:
+            nuevo_valor = float(nuevo_valor)
+            df.at[indice, 'Valor'] = nuevo_valor
+            break
+        except ValueError:
+            print("Error: Ingrese un valor numérico válido")
+
+    # Guardar cambios
+    try:
+        df.to_excel(rutaArchivo, index=False)
+        print("\n¡Cambios guardados exitosamente!")
+        
+        # Mostrar registro actualizado
+        registro_actualizado = df.loc[indice]
+        print("\nRegistro actualizado:")
+        print(f"Fecha: {registro_actualizado['Fecha']}")
+        print(f"Valor: {registro_actualizado['Valor']} {PARAMETROS_CALIDAD.get(parametro, {}).get('unidades', '')}")
+        
+    except Exception as e:
+        print(f"\nError al guardar cambios: {e}")
+    
+    pausarConsola()
+
+def agregarDatosExistente():
+    #Agrega datos a un archivo de parámetro existente
+    
+    #Si no hay un cuerpo de agua activo en las configuraciones, corta la ejeciución
+    if not config.activeWaterBody:
+        print("Error: No hay cuerpo de agua seleccionado")
+        pausarConsola()
+        return
+
+    #Obten la lista de archivos disponibles
+    archivos = listarArchivosDisponibles()
+    #Si no hay, corta la ejecución y muestra un mensaje en pantalla
+    if not archivos:
+        print("No hay archivos de parámetros disponibles")
+        pausarConsola()
+        #Corta la ejecución de la función
+        return
+
+    #Almacena el archivo seleccionado
+    archivoSeleccionado = seleccionarArchivo(archivos, "Seleccione parámetro para editar")
+    #Si no se eligio ninguno, corta la ejecución
+    if not archivoSeleccionado:
+        return
+
+    #Define la ruta del archivo en el que almacenar los nuevos datos
+    rutaArchivo = obtenerRutaDatos() / archivoSeleccionado
+    try:
+        #Define el data frame que es igual a los datos del excel
+        df = pd.read_excel(rutaArchivo)
+
+        #Parametro es igual a el parametro formateado
+        parametro = str(archivoSeleccionado).replace("DATOS_", "").replace("_", " ").replace(".xlsx", "")
+    except Exception as e: #Manejo de errores
+        print(f"Error al leer archivo: {e}")
+        pausarConsola()
+        return
+    
+    #Se obtiene el rango ideal del parametro actual, en el diccionario de parametros
     rangoideal = PARAMETROS_CALIDAD.get(parametro, {}).get('rango_normal', 'No disponible')
+    
+    #Mensajes para el usuario
     print(f"\nDatos actuales de {parametro} ({len(df)} registros):")
     print(df.to_string(index=False))
     print(f"\nRango ideal: {rangoideal}")
 
-    nuevos_datos = []
+    #Se define una función con los nuevos datos ingresados
+    nuevosDatos = []
+    #Mensajes para el usuario
     print(f"\nIngrese nuevos datos para {parametro} (deje fecha vacía para terminar):")
     print(f"Unidades: {PARAMETROS_CALIDAD.get(parametro, {}).get('unidades', 'Desconocidas')}")
     
+    #Se piden los nuevos datos, en el ciclo se valida que se tenga el formato correcto tanto para fecha como para los valores
     while True:
         fecha = input("\nFecha (dd/mm/aa): ").strip()
         if not fecha:
             break
-            
         try:
             datetime.strptime(fecha, "%d/%m/%y")
         except ValueError:
@@ -289,7 +417,7 @@ def agregarDatosExistente():
             
         try:
             valor = float(input(f"Valor de {parametro}: "))
-            nuevos_datos.append({
+            nuevosDatos.append({
                 "Fecha": fecha,
                 "Parámetro": parametro,
                 "Valor": valor,
@@ -298,40 +426,44 @@ def agregarDatosExistente():
         except ValueError:
             print("Error: Ingrese un valor numérico válido")
 
-    if not nuevos_datos:
+    #Si no se ingresaron nuevos datos, muestralo en pantalla
+    if not nuevosDatos:
         print("No se agregaron datos nuevos")
         pausarConsola()
         return
 
     # Combinar y guardar
-    df_nuevos = pd.DataFrame(nuevos_datos)
-    df = pd.concat([df, df_nuevos], ignore_index=True)
-    df.to_excel(ruta_archivo, index=False)
+    dfNuevos = pd.DataFrame(nuevosDatos)
+    df = pd.concat([df, dfNuevos], ignore_index=True)
+    df.to_excel(rutaArchivo, index=False)
     
-    print(f"\nSe agregaron {len(df_nuevos)} registros. Total: {len(df)}")
+    print(f"\nSe agregaron {len(dfNuevos)} registros. Total: {len(df)}")
     pausarConsola()
 
 def evaluarParametros():
-    """Evalúa los parámetros actuales contra sus rangos normales"""
+    #Evalúa los parámetros actuales contra sus rangos normales 
     if not config.activeWaterBody:
         print("Error: No hay cuerpo de agua seleccionado")
         pausarConsola()
         return
 
+    #Se listan archivos
     archivos = listarArchivosDisponibles()
+    #SI no hay, corta la ejecución
     if not archivos:
         print("No hay parámetros registrados para evaluar")
         pausarConsola()
         return
 
-    archivo_seleccionado = seleccionarArchivo(archivos, "Seleccione parámetro a evaluar")
-    if not archivo_seleccionado:
+    #Selecciona el archivo
+    archivoSeleccionado = seleccionarArchivo(archivos, "Seleccione parámetro a evaluar")
+    if not archivoSeleccionado:
         return
 
     # Cargar datos
-    ruta_archivo = obtenerRutaDatos() / archivo_seleccionado
+    rutaArchivo = obtenerRutaDatos() / archivoSeleccionado
     try:
-        df = pd.read_excel(ruta_archivo)
+        df = pd.read_excel(rutaArchivo)
         
         # Verificar que el archivo tenga las columnas correctas
         if 'Fecha' not in df.columns or 'Valor' not in df.columns:
@@ -340,9 +472,9 @@ def evaluarParametros():
             return
             
         # Obtener el nombre del parámetro del nombre del archivo
-        parametro = archivo_seleccionado.replace('DATOS_', '').replace('.xlsx', '').replace('_', ' ')
-        ultimo_valor = df['Valor'].iloc[-1]
-        fecha_ultimo = df['Fecha'].iloc[-1]
+        parametro = archivoSeleccionado.replace('DATOS_', '').replace('.xlsx', '').replace('_', ' ')
+        ultimoValor = df['Valor'].iloc[-1]
+        fechaUltimo = df['Fecha'].iloc[-1]
         
     except Exception as e:
         print(f"Error al leer archivo: {e}")
@@ -359,16 +491,16 @@ def evaluarParametros():
     print("\n" + "="*40)
     print(f"   EVALUACIÓN DE {parametro.upper()}")
     print("="*40)
-    print(f"\nÚltima medición: {fecha_ultimo}")
-    print(f"Valor actual: {ultimo_valor} {unidades}")
+    print(f"\nÚltima medición: {fechaUltimo}")
+    print(f"Valor actual: {ultimoValor} {unidades}")
     
     if rango:
         print(f"Rango ideal: {rango[0]} - {rango[1]} {unidades}")
         
-        if ultimo_valor < rango[0]:
+        if ultimoValor < rango[0]:
             print("\nRESULTADO: VALOR POR DEBAJO DEL Rango ideal ⚠️")
             print(f"Recomendacion: {recomendacion}")
-        elif ultimo_valor > rango[1]:
+        elif ultimoValor > rango[1]:
             print("\nRESULTADO: VALOR POR ENCIMA DEL Rango ideal ⚠️")
             print(f"Recomendacion: {recomendacion}")
         else:
@@ -384,26 +516,28 @@ def evaluarParametros():
     pausarConsola()
 
 def realizarPredicciones():
-    """Realiza predicciones basadas en datos históricos"""
+    #Realiza predicciones basadas en datos históricos
     if not config.activeWaterBody:
         print("Error: No hay cuerpo de agua seleccionado")
         pausarConsola()
         return
 
+    #Se listan los archivos
     archivos = listarArchivosDisponibles()
     if not archivos:
         print("No hay archivos disponibles para predicción")
         pausarConsola()
         return
 
-    archivo_seleccionado = seleccionarArchivo(archivos, "Seleccione archivo para predicción")
-    if not archivo_seleccionado:
+    #Se seleccionan los archivos
+    archivoSeleccionado = seleccionarArchivo(archivos, "Seleccione archivo para predicción")
+    if not archivoSeleccionado:
         return
 
     # Cargar datos
-    ruta_archivo = obtenerRutaDatos() / archivo_seleccionado
+    rutaArchivo = obtenerRutaDatos() / archivoSeleccionado
     try:
-        df = pd.read_excel(ruta_archivo)
+        df = pd.read_excel(rutaArchivo)
         
         # Verificar columnas necesarias
         if 'Fecha' not in df.columns or 'Valor' not in df.columns:
@@ -434,8 +568,9 @@ def realizarPredicciones():
     print("4. Años futuros")
     
     try:
-        unidad_tiempo = int(input("Seleccione unidad de tiempo (1-4): "))
-        if unidad_tiempo not in [1, 2, 3, 4]:
+        #Selecciona como se quieren ver las predicciones
+        unidadTiempo = int(input("Seleccione unidad de tiempo (1-4): "))
+        if unidadTiempo not in [1, 2, 3, 4]:
             print("Error: Seleccione 1-4")
             pausarConsola()
             return
@@ -455,64 +590,68 @@ def realizarPredicciones():
     y = df['Valor'].values
     
     try:
-        coefficients = np.polyfit(X, y, 1)
-        predictor = np.poly1d(coefficients)
+        coeficientes = np.polyfit(X, y, 1)
+        predictor = np.poly1d(coeficientes)
     except Exception as e:
         print(f"Error al calcular predicción: {e}")
         pausarConsola()
         return
 
     # Generar predicciones
-    last_date = df['Fecha'].max()
-    last_days = df['Dias'].max()
+    ultimaFecha = df['Fecha'].max()
+    ultimoDia = df['Dias'].max()
     
     print("\nPredicciones:")
     print("-------------")
-    print(f"Última fecha registrada: {last_date.strftime('%d/%m/%Y')}")
+    print(f"Última fecha registrada: {ultimaFecha.strftime('%d/%m/%Y')}")
     print(f"Último valor registrado: {y[-1]:.2f}")
     print("-------------")
     
-    time_deltas = {
+    timeDeltas = {
         1: timedelta(days=1),
         2: timedelta(weeks=1),
         3: timedelta(days=30),
         4: timedelta(days=365)
     }
     
-    unit_names = {1: "días", 2: "semanas", 3: "meses", 4: "años"}
-    delta = time_deltas[unidad_tiempo]
+    #Se listan los nombres de las unidades
+    nombresUnidades = {1: "días", 2: "semanas", 3: "meses", 4: "años"}
+    delta = timeDeltas[unidadTiempo]
     
     for i in range(1, periodos+1):
-        future_date = last_date + i * delta
-        future_days = last_days + (future_date - last_date).days
-        predicted_value = predictor(future_days)
+        fechaFutura = ultimaFecha + i * delta
+        diasFuturos = ultimoDia + (fechaFutura - ultimaFecha).days
+        valoresPrediccion = predictor(diasFuturos)
         
-        print(f"{i} {unit_names[unidad_tiempo]}: {future_date.strftime('%d/%m/%Y')} -> {predicted_value:.2f}")
+        print(f"{i} {nombresUnidades[unidadTiempo]}: {fechaFutura.strftime('%d/%m/%Y')} -> {valoresPrediccion:.2f}")
     
     pausarConsola()
 
 def visualizarArchivo():
-    """Muestra el contenido de un archivo seleccionado"""
+    #Muestra el contenido de un archivo seleccionado
     if not config.activeWaterBody:
         print("Error: No hay cuerpo de agua seleccionado")
         pausarConsola()
         return
 
+    #Se listan los archivos
     archivos = listarArchivosDisponibles()
     if not archivos:
         print("No hay archivos disponibles")
         pausarConsola()
         return
 
-    archivo_seleccionado = seleccionarArchivo(archivos, "Seleccione archivo a visualizar")
-    if not archivo_seleccionado:
+    #Se selecciona el archivo
+    archivoSeleccionado = seleccionarArchivo(archivos, "Seleccione archivo a visualizar")
+    #Si no se selecciono corta el flujo
+    if not archivoSeleccionado:
         return
 
     # Mostrar datos
-    ruta_archivo = obtenerRutaDatos() / archivo_seleccionado
+    rutaArchivo = obtenerRutaDatos() / archivoSeleccionado
     try:
-        df = pd.read_excel(ruta_archivo, usecols=["Fecha", "Valor"])
-        parametro = archivo_seleccionado.replace('DATOS_', '').replace('.xlsx', '').replace('_', ' ')
+        df = pd.read_excel(rutaArchivo, usecols=["Fecha", "Valor"])
+        parametro = archivoSeleccionado.replace('DATOS_', '').replace('.xlsx', '').replace('_', ' ')
         
         limpiarConsola()
         print("\n" + "="*40)
@@ -531,8 +670,10 @@ def visualizarArchivo():
 
 
 def obtenerValores(rutaDatos, archivos):
+    #Se define el diccionario de valores
     valores = {}
 
+    #Extraemos el ultimo valor de cada archivo disponible
     for archivo in archivos:
         ruta = rutaDatos / archivo
         df   = pd.read_excel(ruta)
@@ -540,22 +681,26 @@ def obtenerValores(rutaDatos, archivos):
         if df.empty:
             continue
 
-        ultimo_valor = df["Valor"].iloc[-1]
-        if isinstance(ultimo_valor, np.generic):
-            ultimo_valor = ultimo_valor.item()
+        ultimoValor = df["Valor"].iloc[-1]
+        if isinstance(ultimoValor, np.generic):
+            ultimoValor = ultimoValor.item()
 
-        nombre_param = archivo.replace("DATOS_", "").replace(".xlsx", "").replace("_", " ")
-        valores[nombre_param] = ultimo_valor
+        nombreParam = archivo.replace("DATOS_", "").replace(".xlsx", "").replace("_", " ")
+        valores[nombreParam] = ultimoValor
     
     return valores
         
 
 def evaluarCalidadICA():
 
+    #Se obtiene la ruta base
     rutaDatos = obtenerRutaDatos()
+    #Se crea una lista con los nombres de los archivos que terminan en xlsx en la carpeta Datos
     archivos   = [f.name for f in rutaDatos.glob("*.xlsx")]
+    #Se obtienen los valores
     valores = obtenerValores(rutaDatos, archivos)
     
+    #Definimos el diccionario de ponderaciones
     ponderaciones = {
         "pH": 0.11,
         "Temperatura": 0.10,
@@ -569,6 +714,7 @@ def evaluarCalidadICA():
         "Sólidos Totales Disueltos (TDS)": 0.05
     }
 
+    #Definimos el diccionario de rangos ideales segun ica
     rangosIdeales = {
         "pH": (6.5, 8.5),
         "Temperatura": (10, 25),
@@ -582,24 +728,31 @@ def evaluarCalidadICA():
         "Sólidos Totales Disueltos TDS": (200, 500)
     }
 
+    #Se definen la variables
     icaTotal = 0
     observaciones = []
 
+    #Ciclo que recorre los valores de los parametros, evaluando la calidad de cada uno de ellos
     for parametro, valor in valores.items():
+        #Si no existen parametros ideales registrados, pasa al siguiente item
         if parametro not in rangosIdeales:
             observaciones.append(f"{parametro} no se reconoce para ICA.")
             continue
 
+        #Se desestructuran esos rangos ideales y se define el peso usando las ponderaciones
         minVal, maxVal = rangosIdeales[parametro]
         peso = ponderaciones.get(parametro, 0)
 
+        #Si el valor esta dentro del rango ideal, su puntaje es 100
         if minVal <= valor <= maxVal:
             indice = 100
             observaciones.append(f"{parametro}\n   Rango ideal: {rangosIdeales[parametro]}\n   Valor actual: {valor}\n   Dentro del rango ✅\n")
         else:
+            #Sino calcula su exeso
             exceso = max(abs(valor - minVal), abs(valor - maxVal))
             indice = max(0, 100 - exceso * 10)
         
+        #Calcula el ica total
         icaTotal += indice * peso
 
         if not (minVal <= valor <= maxVal):
@@ -616,10 +769,11 @@ def evaluarCalidadICA():
     else:
         nivel = "Muy mala"
 
+    #Se le muestra al usuario los resultados de la evaluación
     print("==============================================")
     print("Evaluación de la calidad del agua segun el ICA")
     print("==============================================\n")
-    print(f"ICA: {round(icaTotal, 2)}")
+    print(f"ICA: {round(icaTotal, 2)}%")
     print(f"Nivel de calidad: {nivel}")
     if len(archivos) < 10:
         print(f"Nota: No se tienen todos los parametros necesarios para la evaluación")
@@ -631,23 +785,15 @@ def evaluarCalidadICA():
 
 
 def definirDiagramaPareto():
+    #Se hace el analisis de pareto para los parametros
+    
+    #Se obtiene la ruta de los datos
     rutaDatos = obtenerRutaDatos()
+    #Se extrae en una lista los archivos que terminan en xlsx dentro de la carpeta Datos
     archivos = [f.name for f in rutaDatos.glob("*.xlsx")]
     valores = obtenerValores(rutaDatos, archivos)
 
-    ponderaciones = {
-        "pH": 0.11,
-        "Temperatura": 0.10,
-        "Turbidez": 0.08,
-        "Oxígeno Disuelto": 0.17,
-        "Conductividad": 0.07,
-        "Nitratos": 0.10,
-        "Fosfatos": 0.10,
-        "Coliformes Fecales": 0.12,
-        "Demanda Bioquímica de Oxígeno (DBO)": 0.10,
-        "Sólidos Totales Disueltos (TDS)": 0.05
-    }
-
+    #Se definen los rangos ideales
     rangosIdeales = {
         "pH": (6.5, 8.5),
         "Temperatura": (10, 25),
@@ -661,8 +807,10 @@ def definirDiagramaPareto():
         "Sólidos Totales Disueltos (TDS)": (200, 500)
     }
 
+    #Se define un diccionario
     impactosNegativos = {}
 
+    #Ciclo en el que se calucla el ICA por parametro y luego se calcula el impacto negativo
     for parametro, valor in valores.items():
         if parametro not in rangosIdeales:
             continue
@@ -687,12 +835,17 @@ def definirDiagramaPareto():
     # Ordenar de mayor a menor impacto
     impactosOrdenados = dict(sorted(impactosNegativos.items(), key=lambda x: x[1], reverse=True))
 
+    #Damos formato a la grafica
     etiquetas = list(impactosOrdenados.keys())
     valoresGrafica = list(impactosOrdenados.values())
 
+    #Calculamos el total
     total = sum(valoresGrafica)
+    #Definimos el diccionario de porcentajes acumulados
     porcentajesAcumulados = []
     acumulado = 0
+    
+    #Se recorren los valore y se calcula el acumulado
     for v in valoresGrafica:
         acumulado += v
         porcentaje = (acumulado / total) * 100 if total != 0 else 0
@@ -757,20 +910,22 @@ def ejecutarOpcion1():
         limpiarConsola()
         mostrarMenuPrincipal()
         
-        opcion = seleccionarOpcion("Seleccione opción", 6)
+        opcion = seleccionarOpcion("Seleccione opción", 7)
         limpiarConsola()
         
         if opcion == 1:
             menuIngresoDatos()
         elif opcion == 2:
-            evaluarParametros()
+            editarValorExistente()
         elif opcion == 3:
             visualizarArchivo()
         elif opcion == 4:
-            realizarPredicciones()
+            evaluarParametros()
         elif opcion == 5:
-            evaluarCalidadICA()
+            realizarPredicciones()
         elif opcion == 6:
+            evaluarCalidadICA()
+        elif opcion == 7:
             break
 
 if __name__ == "__main__":

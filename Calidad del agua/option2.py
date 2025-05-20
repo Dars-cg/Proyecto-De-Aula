@@ -14,11 +14,11 @@ from config import config
 # ======================
 
 def limpiarConsola():
-    """Limpia la pantalla de la consola"""
+    #Limpia la pantalla de la consola 
     os.system('cls')
 
 def pausarConsola():
-    """Pausa la ejecución hasta que el usuario presione una tecla"""
+    #Pausa la ejecución hasta que el usuario presione una tecla 
     os.system("pause")
 
 # ======================
@@ -26,7 +26,7 @@ def pausarConsola():
 # ======================
 
 def mostrarMenuPrincipalGraficas():
-    """Muestra el menú principal de generación de gráficas"""
+    #Muestra el menú principal de generación de gráficas 
     print("=================================")
     print("     GENERACIÓN DE GRÁFICAS")
     print("=================================")
@@ -35,7 +35,7 @@ def mostrarMenuPrincipalGraficas():
     print("3. Volver al menú anterior")
 
 def mostrarMenuTipoGrafica():
-    """Muestra los tipos de gráficas disponibles"""
+    #Muestra los tipos de gráficas disponibles 
     print("=========================")
     print("    TIPO DE GRÁFICA")
     print("=========================")
@@ -49,63 +49,66 @@ def mostrarMenuTipoGrafica():
 # ======================
 
 def obtenerRutaDatos():
-    """Retorna la ruta a la carpeta de datos del cuerpo de agua activo"""
+    #Retorna la ruta a la carpeta de datos del cuerpo de agua activo 
     return Path(f"CuerposDeAgua/{config.activeWaterBody}/Datos")
 
 def obtenerRutaGraficas(tipo=None):
-    """Retorna la ruta a la carpeta de gráficas"""
+    #Retorna la ruta a la carpeta de gráficas 
     base = Path(f"CuerposDeAgua/{config.activeWaterBody}/Graficas")
     if tipo:
         return base / tipo
     return base
 
-def seleccionarArchivo(files, mensaje):
-    """Permite al usuario seleccionar un archivo de la lista"""
+def seleccionarArchivo(arvhivos, mensaje):
+    #Permite al usuario seleccionar un archivo de la lista 
     print("\nArchivos disponibles:")
-    for i, file in enumerate(files, 1):
-        print(f"{i}. {file}")
+    for i, archivo in enumerate(arvhivos, 1):
+        print(f"{i}. {archivo}")
 
     while True:
         try:
             opcion = int(input(f"\n{mensaje} (0 para cancelar): "))
             if opcion == 0:
                 return None
-            if 1 <= opcion <= len(files):
-                return files[opcion-1]
+            if 1 <= opcion <= len(arvhivos):
+                return arvhivos[opcion-1]
             print("Error: Número fuera de rango")
         except ValueError:
             print("Error: Ingrese un número válido")
 
-def crearGrafica(tipo_grafica):
-    """Crea y guarda una gráfica según el tipo seleccionado"""
+def crearGrafica(tipoGrafica):
+    """Crea y guarda una gráfica según el tipo seleccionado con opción de invertir eje X (fechas)"""
     if not config.activeWaterBody:
         print("Error: No hay cuerpo de agua seleccionado")
         pausarConsola()
         return
 
     # Obtener lista de archivos disponibles
-    ruta_datos = obtenerRutaDatos()
-    if not ruta_datos.exists():
+    rutaDatos = obtenerRutaDatos()
+    if not rutaDatos.exists():
         print("Error: No hay datos disponibles.")
         pausarConsola()
         return
 
-    archivos = [archivo.name for archivo in ruta_datos.glob("*.xlsx")]
+    archivos = [archivo.name for archivo in rutaDatos.glob("*.xlsx")]
     if not archivos:
         print("No hay archivos disponibles")
         pausarConsola()
         return
 
     # Seleccionar archivo
-    archivo_seleccionado = seleccionarArchivo(archivos, "Seleccione archivo a graficar")
-    if not archivo_seleccionado:
+    archivoSeleccionado = seleccionarArchivo(archivos, "Seleccione archivo a graficar")
+    if not archivoSeleccionado:
         return
 
     # Leer datos
-    ruta_archivo = ruta_datos / archivo_seleccionado
+    rutaArchivo = rutaDatos / archivoSeleccionado
     try:
-        df = pd.read_excel(ruta_archivo)
-        fechas = df['Fecha'].to_numpy()
+        df = pd.read_excel(rutaArchivo)
+        # Convertir fechas a datetime para ordenamiento correcto
+        df['Fecha'] = pd.to_datetime(df['Fecha'], format='%d/%m/%y')
+        df = df.sort_values('Fecha')  # Ordenar por fecha
+        fechas = df['Fecha']
         valores = df['Valor'].to_numpy()
     except Exception as e:
         print(f"Error al leer archivo: {e}")
@@ -113,8 +116,8 @@ def crearGrafica(tipo_grafica):
         return
 
     # Configurar gráfico
-    fig, ax = plt.subplots()
-    nombre_archivo = archivo_seleccionado.replace(".xlsx", "")
+    fig, ax = plt.subplots(figsize=(10, 6))
+    nombreArchivo = archivoSeleccionado.replace(".xlsx", "")
 
     # Crear gráfico según tipo seleccionado
     tipos = {
@@ -123,48 +126,59 @@ def crearGrafica(tipo_grafica):
         3: ("Lineal", lambda: ax.plot(fechas, valores, marker='o'))
     }
 
-    if tipo_grafica not in tipos:
+    if tipoGrafica not in tipos:
         print("Error: Tipo de gráfica inválido")
         pausarConsola()
         return
 
-    nombre_tipo, funcion_grafica = tipos[tipo_grafica]
-    funcion_grafica()
+    nombreTipo, funcionGrafica = tipos[tipoGrafica]
+    funcionGrafica()
 
     # Configuración del gráfico
-    ax.set_title(nombre_archivo)
+    ax.set_title(nombreArchivo)
     ax.set_xlabel("Fecha")
-    ax.set_ylabel(nombre_archivo)
+    ax.set_ylabel(nombreArchivo)
     ax.grid(True)
+    
+    # Formatear fechas para mejor visualización
+    plt.xticks(rotation=45)
+    fig.autofmt_xdate()
+    
+    # Preguntar si desea invertir el eje X (fechas)
+    invertir = input("\n¿Desea invertir el eje de fechas (mostrar más recientes primero)? (s/n): ").lower()
+    if invertir == 's':
+        ax.invert_xaxis()
 
     # Guardar gráfico
-    ruta_graficas = obtenerRutaGraficas(nombre_tipo)
-    ruta_graficas.mkdir(parents=True, exist_ok=True)
+    rutaGraficas = obtenerRutaGraficas(nombreTipo)
+    rutaGraficas.mkdir(parents=True, exist_ok=True)
 
     timestamp = datetime.now().strftime("%d-%m-%y_%H-%M-%S")
-    nombre_grafica = f"{nombre_archivo}-{timestamp}.png"
-    ruta_completa = ruta_graficas / nombre_grafica
+    nombreGrafica = f"{nombreArchivo}-{timestamp}.png"
+    rutaCompleta = rutaGraficas / nombreGrafica
 
-    plt.savefig(ruta_completa)
+    plt.tight_layout()  # Ajustar layout para que no se corten las etiquetas
+    plt.savefig(rutaCompleta)
     plt.show()
-    print(f"\nGràfica guardada en: {ruta_completa}")
+    print(f"\nGráfica guardada en: {rutaCompleta}")
     pausarConsola()
-
+    
+    
 def visualizarGraficas():
-    """Muestra las gráficas guardadas y permite visualizarlas"""
+    #Muestra las gráficas guardadas y permite visualizarlas 
     if not config.activeWaterBody:
         print("Error: No hay cuerpo de agua seleccionado")
         pausarConsola()
         return
 
-    ruta_base = obtenerRutaGraficas()
-    if not ruta_base.exists():
+    rutaBase = obtenerRutaGraficas()
+    if not rutaBase.exists():
         print("No hay gráficas guardadas")
         pausarConsola()
         return
 
     # Listar tipos de gráficas disponibles
-    carpetas = [carpeta for carpeta in ruta_base.iterdir() if carpeta.is_dir()]
+    carpetas = [carpeta for carpeta in rutaBase.iterdir() if carpeta.is_dir()]
     if not carpetas:
         print("No hay gráficas guardadas")
         pausarConsola()
@@ -188,19 +202,19 @@ def visualizarGraficas():
         pausarConsola()
         return
 
-    carpeta_seleccionada = carpetas[opcion - 1]
-    graficas = list(carpeta_seleccionada.glob("*.png"))
+    carpetaSeleccionada = carpetas[opcion - 1]
+    graficas = list(carpetaSeleccionada.glob("*.png"))
 
     # Ordenar por fecha de modificación (más reciente primero)
     graficas.sort(key=lambda x: x.stat().st_mtime, reverse=True)
 
     if not graficas:
-        print(f"No hay gráficas en {carpeta_seleccionada.name}")
+        print(f"No hay gráficas en {carpetaSeleccionada.name}")
         pausarConsola()
         return
 
     # Mostrar gráficas disponibles
-    print(f"\nGráficas disponibles en {carpeta_seleccionada.name}:")
+    print(f"\nGráficas disponibles en {carpetaSeleccionada.name}:")
     for i, grafica in enumerate(graficas, 1):
         print(f"{i}. {grafica.name}")
     # Seleccionar gráfica para visualizar
@@ -209,8 +223,8 @@ def visualizarGraficas():
         if opcion == 0:
             return
         if 1 <= opcion <= len(graficas):
-            grafica_seleccionada = graficas[opcion-1]
-            os.startfile(grafica_seleccionada)  # Abre con visor predeterminado
+            graficaSeleccionada = graficas[opcion-1]
+            os.startfile(graficaSeleccionada)  # Abre con visor predeterminado
         else:
             print("Error: Opción inválida")
     except ValueError:
@@ -223,7 +237,7 @@ def visualizarGraficas():
 # ======================
 
 def menuTipoGrafica():
-    """Maneja la selección del tipo de gráfica"""
+    #Maneja la selección del tipo de gráfica 
     while True:
         limpiarConsola()
         mostrarMenuTipoGrafica()
@@ -244,7 +258,7 @@ def menuTipoGrafica():
             pausarConsola()
 
 def ejecutarOpcion2():
-    """Controla el flujo principal de la opción 2"""
+    #Controla el flujo principal de la opción 2 
     while True:
         limpiarConsola()
         mostrarMenuPrincipalGraficas()
