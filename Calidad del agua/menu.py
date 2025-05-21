@@ -32,7 +32,7 @@ def ejecutarAplicacion():
     limpiarConsola()
     while True:
         menu2()
-        opcion = int(input("Ingrese una opcion: "))
+        opcion = int(input("Ingrese una opcion: ")) 
         limpiarConsola()
         if opcion >= 1 and opcion <= 5:
             if opcion == 1:

@@ -706,7 +706,6 @@ def evaluarCalidadICA():
         "Temperatura": 0.10,
         "Turbidez": 0.08,
         "Oxígeno Disuelto": 0.17,
-        #"Conductividad": 0.07, No entre en el ICA - NSF que estamos utilizando
         "Nitratos": 0.10,
         "Fosfatos": 0.10,
         "Coliformes Fecales": 0.12,
@@ -720,7 +719,6 @@ def evaluarCalidadICA():
         "Temperatura": (10, 25),
         "Turbidez": (0, 5),
         "Oxígeno Disuelto": (5, 12),
-        #Conductividad": (100, 1000), No entre en el ICA - NSF que estamos utilizando
         "Nitratos": (0, 10),
         "Fosfatos": (0, 0.1),
         "Coliformes Fecales": (0, 200),
