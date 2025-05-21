@@ -584,6 +584,20 @@ def realizarPredicciones():
         print("Error: Ingrese un número válido")
         pausarConsola()
         return
+    
+    df.sort_values('Fecha', inplace=True)  # Compromiso: Verificar consumo de memoria en datasets >1M registros
+
+    # Validación de ordenamiento (Compromiso: Loggear advertencias)
+    if not df['Fecha'].is_monotonic_increasing:
+        print("¡Advertencia! Datos reordenados cronológicamente")
+
+    # Cálculo de días DESPUÉS de ordenar
+    df['Dias'] = (df['Fecha'] - df['Fecha'].min()).dt.days  # Compromiso: Verificar delta mínimo = 1 día
+
+    # Detección de gaps (Compromiso: Umbral configurable)
+    saltos = np.diff(df['Dias'])
+    if any(saltos > 30):
+        print(f"Advertencia: Saltos temporales >30 días detectados (Máx: {max(saltos)} días)")
 
     # Calcular regresión lineal
     X = df['Dias'].values
